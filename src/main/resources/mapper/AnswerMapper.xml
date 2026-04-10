@@ -16,6 +16,13 @@
         ORDER BY version DESC
     </select>
 
+    <select id="findByDeliveryIdAndUserId" resultType="Answer">
+        SELECT id, user_id, question_id, delivery_id, content, version, is_final, submitted_at
+        FROM answer
+        WHERE delivery_id = #{deliveryId} AND user_id = #{userId}
+        ORDER BY version DESC
+    </select>
+
     <select id="findById" resultType="Answer">
         SELECT id, user_id, question_id, delivery_id, content, version, is_final, submitted_at
         FROM answer
@@ -39,6 +46,12 @@
 
     <select id="getMaxVersionByDeliveryId" resultType="java.lang.Integer">
         SELECT MAX(version)
+        FROM answer
+        WHERE delivery_id = #{deliveryId}
+    </select>
+
+    <select id="countByDeliveryId" resultType="int">
+        SELECT COUNT(*)
         FROM answer
         WHERE delivery_id = #{deliveryId}
     </select>

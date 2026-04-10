@@ -13,6 +13,8 @@ public interface AnswerMapper {
 
     List<Answer> findByDeliveryId(@Param("deliveryId") Long deliveryId);
 
+    List<Answer> findByDeliveryIdAndUserId(@Param("deliveryId") Long deliveryId, @Param("userId") Long userId);
+
     Answer findById(@Param("id") Long id);
 
     Answer findLatestByDeliveryId(@Param("deliveryId") Long deliveryId);
@@ -20,4 +22,6 @@ public interface AnswerMapper {
     List<Answer> findByUserId(@Param("userId") Long userId);
 
     Integer getMaxVersionByDeliveryId(@Param("deliveryId") Long deliveryId);
+
+    int countByDeliveryId(@Param("deliveryId") Long deliveryId);
 }

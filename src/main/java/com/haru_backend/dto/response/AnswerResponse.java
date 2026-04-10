@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class AnswerResponse {
 
     private Long id;
+    private Long userId;
     private Long deliveryId;
     private Long questionId;
     private String questionContent;
