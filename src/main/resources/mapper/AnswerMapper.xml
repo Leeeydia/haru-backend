@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haru_backend.mapper.AnswerMapper">
+
+    <insert id="insertAnswer" parameterType="Answer" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO answer (user_id, question_id, delivery_id, content, version, is_final)
+        VALUES (#{userId}, #{questionId}, #{deliveryId}, #{content}, #{version}, #{isFinal})
+    </insert>
+
+    <select id="findByDeliveryId" resultType="Answer">
+        SELECT id, user_id, question_id, delivery_id, content, version, is_final, submitted_at
+        FROM answer
+        WHERE delivery_id = #{deliveryId}
+        ORDER BY version DESC
+    </select>
+
+    <select id="findById" resultType="Answer">
+        SELECT id, user_id, question_id, delivery_id, content, version, is_final, submitted_at
+        FROM answer
+        WHERE id = #{id}
+    </select>
+
+    <select id="findLatestByDeliveryId" resultType="Answer">
+        SELECT id, user_id, question_id, delivery_id, content, version, is_final, submitted_at
+        FROM answer
+        WHERE delivery_id = #{deliveryId}
+        ORDER BY version DESC
+        LIMIT 1
+    </select>
+
+    <select id="findByUserId" resultType="Answer">
+        SELECT id, user_id, question_id, delivery_id, content, version, is_final, submitted_at
+        FROM answer
+        WHERE user_id = #{userId}
+        ORDER BY submitted_at DESC
+    </select>
+
+    <select id="getMaxVersionByDeliveryId" resultType="java.lang.Integer">
+        SELECT MAX(version)
+        FROM answer
+        WHERE delivery_id = #{deliveryId}
+    </select>
+
+</mapper>
