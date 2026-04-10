@@ -5,6 +5,7 @@ import com.haru_backend.dto.response.FeedbackResponse;
 import com.haru_backend.service.FeedbackService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,8 +22,11 @@ public class FeedbackController {
     }
 
     @GetMapping("/{answerId}")
-    public ResponseEntity<ApiResponse<FeedbackResponse>> getFeedback(@PathVariable Long answerId) {
-        FeedbackResponse data = feedbackService.getFeedback(answerId);
+    public ResponseEntity<ApiResponse<FeedbackResponse>> getFeedback(
+            Authentication authentication,
+            @PathVariable Long answerId) {
+        Long userId = (Long) authentication.getPrincipal();
+        FeedbackResponse data = feedbackService.getFeedback(answerId, userId);
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 }

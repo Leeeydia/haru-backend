@@ -23,4 +23,5 @@ public class AnswerResponse {
     private Integer version;
     private Boolean isFinal;
     private LocalDateTime submittedAt;
+    private Long feedbackId;
 }

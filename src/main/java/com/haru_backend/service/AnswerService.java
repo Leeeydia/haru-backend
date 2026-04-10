@@ -6,6 +6,7 @@ import com.haru_backend.domain.QuestionDelivery;
 import com.haru_backend.dto.request.AnswerRequest;
 import com.haru_backend.dto.response.AnswerHistoryResponse;
 import com.haru_backend.dto.response.AnswerResponse;
+import com.haru_backend.dto.response.FeedbackResponse;
 import com.haru_backend.dto.response.QuestionDetailResponse;
 import com.haru_backend.mapper.AnswerMapper;
 import com.haru_backend.mapper.QuestionDeliveryMapper;
@@ -67,10 +68,12 @@ public class AnswerService {
 
         answerMapper.insertAnswer(answer);
 
+        Long feedbackId = null;
         if (isFinal) {
             questionDeliveryMapper.updateAnswered(delivery.getId(), true);
             try {
-                feedbackService.generateFeedback(answer.getId());
+                FeedbackResponse feedbackResponse = feedbackService.generateFeedback(answer.getId());
+                feedbackId = feedbackResponse.getId();
             } catch (Exception e) {
                 log.error("AI 피드백 자동 생성 실패: answerId={}", answer.getId(), e);
             }
@@ -89,6 +92,7 @@ public class AnswerService {
                 .version(answer.getVersion())
                 .isFinal(answer.getIsFinal())
                 .submittedAt(answer.getSubmittedAt())
+                .feedbackId(feedbackId)
                 .build();
     }
 

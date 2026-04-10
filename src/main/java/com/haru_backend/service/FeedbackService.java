@@ -70,7 +70,15 @@ public class FeedbackService {
         return toResponse(feedback);
     }
 
-    public FeedbackResponse getFeedback(Long answerId) {
+    public FeedbackResponse getFeedback(Long answerId, Long userId) {
+        Answer answer = answerMapper.findById(answerId);
+        if (answer == null) {
+            throw new IllegalArgumentException("답변이 존재하지 않습니다");
+        }
+        if (!answer.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("본인의 답변에 대한 피드백만 조회할 수 있습니다");
+        }
+
         Feedback feedback = feedbackMapper.findLatestByAnswerId(answerId);
         if (feedback == null) {
             throw new IllegalArgumentException("피드백이 존재하지 않습니다");
