@@ -79,6 +79,7 @@ public class AnswerService {
 
         return AnswerResponse.builder()
                 .id(answer.getId())
+                .userId(userId)
                 .deliveryId(delivery.getId())
                 .questionId(question.getId())
                 .questionContent(question.getContent())
@@ -104,6 +105,7 @@ public class AnswerService {
         Question question = questionMapper.findById(answer.getQuestionId());
         return AnswerResponse.builder()
                 .id(answer.getId())
+                .userId(answer.getUserId())
                 .deliveryId(answer.getDeliveryId())
                 .questionId(answer.getQuestionId())
                 .questionContent(question != null ? question.getContent() : null)
