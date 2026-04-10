@@ -33,6 +33,7 @@ public class QuestionScheduler {
     private final MailService mailService;
     private final ObjectMapper objectMapper;
 
+    // 테스트용: @Scheduled(cron = "0 */1 * * * *") — 1분마다 실행
     @Scheduled(cron = "0 0 * * * *")
     public void sendDailyQuestions() {
         int currentHour = LocalDateTime.now().getHour();

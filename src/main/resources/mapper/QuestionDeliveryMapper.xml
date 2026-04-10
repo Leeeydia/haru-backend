@@ -15,4 +15,22 @@
         WHERE user_id = #{userId}
     </select>
 
+    <select id="findByAnswerToken" resultType="QuestionDelivery">
+        SELECT id, user_id, question_id, answer_token, sent_at, answered
+        FROM question_delivery
+        WHERE answer_token = #{answerToken}
+    </select>
+
+    <select id="findById" resultType="QuestionDelivery">
+        SELECT id, user_id, question_id, answer_token, sent_at, answered
+        FROM question_delivery
+        WHERE id = #{id}
+    </select>
+
+    <update id="updateAnswered">
+        UPDATE question_delivery
+        SET answered = #{answered}
+        WHERE id = #{id}
+    </update>
+
 </mapper>

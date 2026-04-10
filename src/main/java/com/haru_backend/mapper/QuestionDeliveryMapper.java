@@ -12,4 +12,10 @@ public interface QuestionDeliveryMapper {
     void insertDelivery(QuestionDelivery delivery);
 
     List<Long> findDeliveredQuestionIds(@Param("userId") Long userId);
+
+    QuestionDelivery findByAnswerToken(@Param("answerToken") String answerToken);
+
+    QuestionDelivery findById(@Param("id") Long id);
+
+    void updateAnswered(@Param("id") Long id, @Param("answered") boolean answered);
 }
