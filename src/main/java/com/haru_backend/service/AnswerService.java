@@ -5,6 +5,7 @@ import com.haru_backend.domain.Question;
 import com.haru_backend.domain.QuestionDelivery;
 import com.haru_backend.dto.request.AnswerRequest;
 import com.haru_backend.dto.response.AnswerResponse;
+import com.haru_backend.dto.response.QuestionDetailResponse;
 import com.haru_backend.mapper.AnswerMapper;
 import com.haru_backend.mapper.QuestionDeliveryMapper;
 import com.haru_backend.mapper.QuestionMapper;
@@ -25,26 +26,18 @@ public class AnswerService {
     private final QuestionMapper questionMapper;
     private final FeedbackService feedbackService;
 
-    public AnswerResponse getQuestionByToken(String answerToken) {
+    public QuestionDetailResponse getQuestionByToken(String answerToken) {
         QuestionDelivery delivery = questionDeliveryMapper.findByAnswerToken(answerToken);
         if (delivery == null) {
             throw new IllegalArgumentException("유효하지 않은 답변 토큰입니다");
         }
 
         Question question = questionMapper.findById(delivery.getQuestionId());
+        if (question == null) {
+            throw new IllegalArgumentException("질문을 찾을 수 없습니다");
+        }
 
-        Answer latest = answerMapper.findLatestByDeliveryId(delivery.getId());
-
-        return AnswerResponse.builder()
-                .deliveryId(delivery.getId())
-                .questionId(question.getId())
-                .questionContent(question.getContent())
-                .category(question.getCategory())
-                .content(latest != null ? latest.getContent() : null)
-                .version(latest != null ? latest.getVersion() : 0)
-                .isFinal(latest != null ? latest.getIsFinal() : false)
-                .submittedAt(latest != null ? latest.getSubmittedAt() : null)
-                .build();
+        return QuestionDetailResponse.from(question);
     }
 
     public AnswerResponse submitAnswer(Long userId, AnswerRequest request) {

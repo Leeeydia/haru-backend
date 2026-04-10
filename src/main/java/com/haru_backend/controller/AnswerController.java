@@ -3,6 +3,7 @@ package com.haru_backend.controller;
 import com.haru_backend.dto.request.AnswerRequest;
 import com.haru_backend.dto.response.AnswerResponse;
 import com.haru_backend.dto.response.ApiResponse;
+import com.haru_backend.dto.response.QuestionDetailResponse;
 import com.haru_backend.service.AnswerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +20,9 @@ public class AnswerController {
 
     private final AnswerService answerService;
 
-    @GetMapping("/token/{answerToken}")
-    public ResponseEntity<ApiResponse<AnswerResponse>> getQuestionByToken(@PathVariable String answerToken) {
-        AnswerResponse data = answerService.getQuestionByToken(answerToken);
+    @GetMapping("/question")
+    public ResponseEntity<ApiResponse<QuestionDetailResponse>> getQuestionByToken(@RequestParam String token) {
+        QuestionDetailResponse data = answerService.getQuestionByToken(token);
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
