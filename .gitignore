@@ -36,5 +36,10 @@ out/
 ### VS Code ###
 .vscode/
 
+### Environment ###
+.env
+*.env
+application-local.yml
+
 ### CLAUDE ###
 CLAUDE.md
