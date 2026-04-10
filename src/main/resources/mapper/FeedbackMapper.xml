@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haru_backend.mapper.FeedbackMapper">
+
+    <insert id="insertFeedback" parameterType="Feedback" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO feedback (answer_id, total_score, completeness, structure, expression, specificity, improved_answer)
+        VALUES (#{answerId}, #{totalScore}, #{completeness}, #{structure}, #{expression}, #{specificity}, #{improvedAnswer})
+    </insert>
+
+    <select id="findByAnswerId" resultType="Feedback">
+        SELECT id, answer_id, total_score, completeness, structure, expression, specificity, improved_answer, created_at
+        FROM feedback
+        WHERE answer_id = #{answerId}
+    </select>
+
+    <select id="findLatestByAnswerId" resultType="Feedback">
+        SELECT id, answer_id, total_score, completeness, structure, expression, specificity, improved_answer, created_at
+        FROM feedback
+        WHERE answer_id = #{answerId}
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+</mapper>

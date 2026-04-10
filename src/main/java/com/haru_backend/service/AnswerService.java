@@ -9,11 +9,13 @@ import com.haru_backend.mapper.AnswerMapper;
 import com.haru_backend.mapper.QuestionDeliveryMapper;
 import com.haru_backend.mapper.QuestionMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AnswerService {
@@ -21,6 +23,7 @@ public class AnswerService {
     private final AnswerMapper answerMapper;
     private final QuestionDeliveryMapper questionDeliveryMapper;
     private final QuestionMapper questionMapper;
+    private final FeedbackService feedbackService;
 
     public AnswerResponse getQuestionByToken(String answerToken) {
         QuestionDelivery delivery = questionDeliveryMapper.findByAnswerToken(answerToken);
@@ -72,6 +75,11 @@ public class AnswerService {
 
         if (isFinal) {
             questionDeliveryMapper.updateAnswered(delivery.getId(), true);
+            try {
+                feedbackService.generateFeedback(answer.getId());
+            } catch (Exception e) {
+                log.error("AI 피드백 자동 생성 실패: answerId={}", answer.getId(), e);
+            }
         }
 
         Question question = questionMapper.findById(delivery.getQuestionId());
