@@ -56,4 +56,30 @@
         WHERE delivery_id = #{deliveryId}
     </select>
 
+    <resultMap id="answerHistoryResultMap" type="com.haru_backend.dto.response.AnswerHistoryResponse">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="questionId" column="question_id"/>
+        <result property="deliveryId" column="delivery_id"/>
+        <result property="content" column="content"/>
+        <result property="version" column="version"/>
+        <result property="isFinal" column="is_final"/>
+        <result property="submittedAt" column="submitted_at"/>
+        <result property="questionContent" column="question_content"/>
+        <result property="category" column="category"/>
+        <result property="difficulty" column="difficulty"/>
+        <result property="score" column="score"/>
+    </resultMap>
+
+    <select id="findMyAnswersWithDetail" resultMap="answerHistoryResultMap">
+        SELECT a.id, a.user_id, a.question_id, a.delivery_id, a.content, a.version, a.is_final, a.submitted_at,
+               q.content AS question_content, q.category, q.difficulty,
+               f.total_score AS score
+        FROM answer a
+        LEFT JOIN question q ON a.question_id = q.id
+        LEFT JOIN feedback f ON a.id = f.answer_id
+        WHERE a.user_id = #{userId}
+        ORDER BY a.submitted_at DESC
+    </select>
+
 </mapper>

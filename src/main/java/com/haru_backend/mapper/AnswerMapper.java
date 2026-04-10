@@ -1,6 +1,7 @@
 package com.haru_backend.mapper;
 
 import com.haru_backend.domain.Answer;
+import com.haru_backend.dto.response.AnswerHistoryResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -24,4 +25,6 @@ public interface AnswerMapper {
     Integer getMaxVersionByDeliveryId(@Param("deliveryId") Long deliveryId);
 
     int countByDeliveryId(@Param("deliveryId") Long deliveryId);
+
+    List<AnswerHistoryResponse> findMyAnswersWithDetail(@Param("userId") Long userId);
 }

@@ -4,6 +4,7 @@ import com.haru_backend.domain.Answer;
 import com.haru_backend.domain.Question;
 import com.haru_backend.domain.QuestionDelivery;
 import com.haru_backend.dto.request.AnswerRequest;
+import com.haru_backend.dto.response.AnswerHistoryResponse;
 import com.haru_backend.dto.response.AnswerResponse;
 import com.haru_backend.dto.response.QuestionDetailResponse;
 import com.haru_backend.mapper.AnswerMapper;
@@ -96,9 +97,8 @@ public class AnswerService {
         return answers.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    public List<AnswerResponse> getMyAnswers(Long userId) {
-        List<Answer> answers = answerMapper.findByUserId(userId);
-        return answers.stream().map(this::toResponse).collect(Collectors.toList());
+    public List<AnswerHistoryResponse> getMyAnswers(Long userId) {
+        return answerMapper.findMyAnswersWithDetail(userId);
     }
 
     private AnswerResponse toResponse(Answer answer) {

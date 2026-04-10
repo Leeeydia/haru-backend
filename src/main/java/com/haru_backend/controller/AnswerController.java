@@ -1,6 +1,7 @@
 package com.haru_backend.controller;
 
 import com.haru_backend.dto.request.AnswerRequest;
+import com.haru_backend.dto.response.AnswerHistoryResponse;
 import com.haru_backend.dto.response.AnswerResponse;
 import com.haru_backend.dto.response.ApiResponse;
 import com.haru_backend.dto.response.QuestionDetailResponse;
@@ -42,9 +43,9 @@ public class AnswerController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<ApiResponse<List<AnswerResponse>>> getMyAnswers(Authentication authentication) {
+    public ResponseEntity<ApiResponse<List<AnswerHistoryResponse>>> getMyAnswers(Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        List<AnswerResponse> data = answerService.getMyAnswers(userId);
+        List<AnswerHistoryResponse> data = answerService.getMyAnswers(userId);
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 }
