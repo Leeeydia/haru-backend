@@ -27,55 +27,62 @@ public class AiService {
     private String model;
 
     public Feedback analyzeFeedback(Long answerId, String questionContent, String answerContent,
-                                     String category, String answerKeywords) {
-        String prompt = buildPrompt(questionContent, answerContent, category, answerKeywords);
+                                     String category, String difficulty, String answerKeywords) {
+        String prompt = buildPrompt(questionContent, answerContent, category, difficulty, answerKeywords);
 
+        // 1차 시도
         try {
-            Map<String, Object> requestBody = Map.of(
-                    "model", model,
-                    "messages", List.of(
-                            Map.of("role", "system", "content", "당신은 개발자 면접 답변을 분석하는 전문 면접관입니다. 반드시 지정된 JSON 형식으로만 응답하세요."),
-                            Map.of("role", "user", "content", prompt)
-                    ),
-                    "temperature", 0.7
-            );
-
-            String responseBody = webClient.post()
-                    .uri("/chat/completions")
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Content-Type", "application/json")
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
-
-            return parseResponse(answerId, responseBody);
+            return callAiAndParse(answerId, prompt);
         } catch (Exception e) {
-            log.error("AI 피드백 분석 실패: answerId={}", answerId, e);
+            log.warn("AI 피드백 1차 시도 실패, 재시도: answerId={}", answerId, e);
+        }
+
+        // 재시도 1회
+        try {
+            return callAiAndParse(answerId, prompt);
+        } catch (Exception e) {
+            log.error("AI 피드백 재시도도 실패: answerId={}", answerId, e);
             throw new RuntimeException("AI 피드백 분석에 실패했습니다", e);
         }
     }
 
+    private Feedback callAiAndParse(Long answerId, String prompt) {
+        Map<String, Object> requestBody = Map.of(
+                "model", model,
+                "messages", List.of(
+                        Map.of("role", "system", "content", "당신은 개발자 면접 답변을 평가하는 전문 면접관입니다. 아래 형식의 JSON으로만 응답하세요. 다른 텍스트는 포함하지 마세요."),
+                        Map.of("role", "user", "content", prompt)
+                ),
+                "temperature", 0.7
+        );
+
+        String responseBody = webClient.post()
+                .uri("/chat/completions")
+                .header("Authorization", "Bearer " + apiKey)
+                .header("Content-Type", "application/json")
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+        return parseResponse(answerId, responseBody);
+    }
+
     private String buildPrompt(String questionContent, String answerContent,
-                                String category, String answerKeywords) {
+                                String category, String difficulty, String answerKeywords) {
         return String.format("""
-                다음 면접 질문에 대한 답변을 분석해주세요.
+                질문: %s
+                카테고리: %s
+                난이도: %s
+                참고 키워드: %s
 
-                [카테고리] %s
-                [질문] %s
-                [참고 키워드] %s
-                [답변] %s
+                사용자 답변:
+                %s
 
-                아래 JSON 형식으로만 응답하세요 (다른 텍스트 없이):
-                {
-                    "totalScore": 0~100 사이 정수,
-                    "completeness": "내용 완성도에 대한 피드백",
-                    "structure": "답변 구조에 대한 피드백",
-                    "expression": "표현/말투에 대한 피드백",
-                    "specificity": "구체성에 대한 피드백",
-                    "improvedAnswer": "개선된 답변 예시"
-                }
-                """, category, questionContent,
+                아래 JSON 형식으로 평가해주세요:
+                {"totalScore": 0-100점, "completeness": "내용 완성도 피드백", "structure": "답변 구조 피드백", "expression": "표현/말투 피드백", "specificity": "구체성 피드백", "improvedAnswer": "개선된 모범 답변"}
+                """, questionContent, category,
+                difficulty != null ? difficulty : "미지정",
                 answerKeywords != null ? answerKeywords : "없음",
                 answerContent);
     }
@@ -85,14 +92,7 @@ public class AiService {
             JsonNode root = objectMapper.readTree(responseBody);
             String content = root.path("choices").get(0).path("message").path("content").asText();
 
-            // JSON 블록만 추출 (```json ... ``` 형태 대응)
-            String json = content;
-            if (content.contains("```")) {
-                int start = content.indexOf("{");
-                int end = content.lastIndexOf("}") + 1;
-                json = content.substring(start, end);
-            }
-
+            String json = extractJson(content);
             JsonNode feedbackNode = objectMapper.readTree(json);
 
             return Feedback.builder()
@@ -108,5 +108,15 @@ public class AiService {
             log.error("AI 응답 파싱 실패: {}", responseBody, e);
             throw new RuntimeException("AI 응답 파싱에 실패했습니다", e);
         }
+    }
+
+    private String extractJson(String content) {
+        // 첫 번째 '{' ~ 마지막 '}' 사이를 JSON으로 추출
+        int start = content.indexOf("{");
+        int end = content.lastIndexOf("}");
+        if (start == -1 || end == -1 || end <= start) {
+            throw new RuntimeException("AI 응답에서 JSON을 찾을 수 없습니다: " + content);
+        }
+        return content.substring(start, end + 1);
     }
 }

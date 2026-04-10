@@ -32,12 +32,27 @@ public class FeedbackService {
 
         Question question = questionMapper.findById(answer.getQuestionId());
 
-        Feedback feedback = aiService.analyzeFeedback(
-                answerId,
-                question.getContent(),
-                answer.getContent(),
-                question.getCategory(),
-                question.getAnswerKeywords());
+        Feedback feedback;
+        try {
+            feedback = aiService.analyzeFeedback(
+                    answerId,
+                    question.getContent(),
+                    answer.getContent(),
+                    question.getCategory(),
+                    question.getDifficulty(),
+                    question.getAnswerKeywords());
+        } catch (Exception e) {
+            log.warn("AI 피드백 생성 실패, 기본 피드백 반환: answerId={}", answerId, e);
+            feedback = Feedback.builder()
+                    .answerId(answerId)
+                    .totalScore(0)
+                    .completeness("AI 분석을 수행할 수 없었습니다. 나중에 다시 시도해주세요.")
+                    .structure("AI 분석을 수행할 수 없었습니다.")
+                    .expression("AI 분석을 수행할 수 없었습니다.")
+                    .specificity("AI 분석을 수행할 수 없었습니다.")
+                    .improvedAnswer("AI 분석을 수행할 수 없었습니다.")
+                    .build();
+        }
 
         feedbackMapper.insertFeedback(feedback);
 
