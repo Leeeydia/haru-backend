@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haru_backend.mapper.QuestionDeliveryMapper">
+
+    <insert id="insertDelivery" parameterType="QuestionDelivery" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO question_delivery (user_id, question_id, answer_token)
+        VALUES (#{userId}, #{questionId}, #{answerToken})
+    </insert>
+
+    <select id="findDeliveredQuestionIds" resultType="long">
+        SELECT question_id
+        FROM question_delivery
+        WHERE user_id = #{userId}
+    </select>
+
+</mapper>

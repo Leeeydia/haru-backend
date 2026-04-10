@@ -25,4 +25,10 @@
         WHERE user_id = #{userId}
     </update>
 
+    <select id="findByReceiveTime" resultType="UserProfile">
+        SELECT id, user_id, job_category, tech_stacks, receive_time, daily_question_count, receive_days
+        FROM user_profile
+        WHERE receive_time = #{receiveTime}
+    </select>
+
 </mapper>

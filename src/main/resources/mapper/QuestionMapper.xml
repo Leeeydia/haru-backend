@@ -42,4 +42,25 @@
         ORDER BY created_at DESC
     </select>
 
+    <select id="findAvailableQuestions" resultType="Question">
+        SELECT id, content, category, difficulty, related_stacks, answer_keywords, created_at
+        FROM question
+        WHERE category = #{category}
+        <if test="stacks != null and stacks.size() > 0">
+            AND (
+            <foreach collection="stacks" item="stack" separator=" OR ">
+                related_stacks LIKE CONCAT('%', #{stack}, '%')
+            </foreach>
+            )
+        </if>
+        <if test="excludeIds != null and excludeIds.size() > 0">
+            AND id NOT IN
+            <foreach collection="excludeIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+        ORDER BY RAND()
+        LIMIT #{limit}
+    </select>
+
 </mapper>

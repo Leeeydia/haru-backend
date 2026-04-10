@@ -9,5 +9,7 @@ public interface UserMapper {
 
     User findByEmail(@Param("email") String email);
 
+    User findById(@Param("id") Long id);
+
     void insertUser(User user);
 }

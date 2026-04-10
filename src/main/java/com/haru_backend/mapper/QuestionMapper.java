@@ -18,4 +18,9 @@ public interface QuestionMapper {
     List<Question> findByCategory(@Param("category") String category);
 
     List<Question> findByCategoryAndStacks(@Param("category") String category, @Param("stacks") List<String> stacks);
+
+    List<Question> findAvailableQuestions(@Param("category") String category,
+                                          @Param("stacks") List<String> stacks,
+                                          @Param("excludeIds") List<Long> excludeIds,
+                                          @Param("limit") int limit);
 }
