@@ -1,9 +1,10 @@
 package com.haru_backend.service;
 
-import jakarta.mail.MessagingException;
+import jakarta.annotation.PostConstruct;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,21 @@ public class MailService {
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
+
+    @Value("${spring.mail.username:}")
+    private String mailUsername;
+
+    @Value("${spring.mail.host:}")
+    private String mailHost;
+
+    @PostConstruct
+    public void checkMailConfig() {
+        boolean hasUsername = mailUsername != null && !mailUsername.isEmpty();
+        log.info("=== 메일 설정 확인 ===");
+        log.info("mail.host={}", mailHost);
+        log.info("mail.username={}", hasUsername ? mailUsername : "(비어있음 - MAIL_USERNAME 환경변수 확인 필요)");
+        log.info("mail.password={}", hasUsername ? "(설정됨)" : "(비어있음 - MAIL_PASSWORD 환경변수 확인 필요)");
+    }
 
     public void sendQuestionEmail(String to, String questionContent, String category, String answerToken) {
         Context context = new Context();
