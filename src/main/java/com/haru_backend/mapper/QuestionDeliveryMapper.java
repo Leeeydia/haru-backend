@@ -20,4 +20,8 @@ public interface QuestionDeliveryMapper {
     void updateAnswered(@Param("id") Long id, @Param("answered") boolean answered);
 
     int countTodayDeliveries(@Param("userId") Long userId);
+
+    List<QuestionDelivery> findUnansweredForReminder(@Param("hoursAgo") int hoursAgo);
+
+    void updateReminderSent(@Param("id") Long id);
 }

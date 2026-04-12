@@ -19,4 +19,5 @@ public class QuestionDelivery {
     private String answerToken;
     private LocalDateTime sentAt;
     private Boolean answered;
+    private Boolean reminderSent;
 }

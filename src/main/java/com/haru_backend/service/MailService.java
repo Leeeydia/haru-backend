@@ -35,10 +35,22 @@ public class MailService {
     }
 
     public void sendQuestionEmail(String to, String questionContent, String category, String answerToken) {
+        sendEmail(to, "[하루한답] 오늘의 면접 질문이 도착했습니다!",
+                questionContent, category, answerToken, false);
+    }
+
+    public void sendReminderEmail(String to, String questionContent, String category, String answerToken) {
+        sendEmail(to, "[하루한답] 아직 답변을 기다리고 있어요!",
+                questionContent, category, answerToken, true);
+    }
+
+    private void sendEmail(String to, String subject, String questionContent,
+                           String category, String answerToken, boolean isReminder) {
         Context context = new Context();
         context.setVariable("questionContent", questionContent);
         context.setVariable("category", category);
         context.setVariable("answerUrl", "http://localhost:5173/answer/" + answerToken);
+        context.setVariable("isReminder", isReminder);
 
         String html = templateEngine.process("mail/question", context);
 
@@ -46,11 +58,11 @@ public class MailService {
             MimeMessage message = mailSender.createMimeMessage();
             message.setFrom(new InternetAddress(mailUsername, "하루한답", "UTF-8"));
             message.setRecipient(MimeMessage.RecipientType.TO, new InternetAddress(to));
-            message.setSubject("[하루한답] 오늘의 면접 질문이 도착했습니다!", "UTF-8");
+            message.setSubject(subject, "UTF-8");
             message.setContent(html, "text/html; charset=UTF-8");
             message.setHeader("Content-Transfer-Encoding", "base64");
             mailSender.send(message);
-            log.debug("이메일 발송 성공: {}", to);
+            log.debug("이메일 발송 성공: {} (reminder={})", to, isReminder);
         } catch (Exception e) {
             log.error("이메일 발송 실패: {}", to, e);
             throw new RuntimeException("이메일 발송에 실패했습니다: " + e.getMessage(), e);

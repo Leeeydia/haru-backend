@@ -105,6 +105,36 @@ public class QuestionScheduler {
         }
     }
 
+    @Scheduled(cron = "0 30 * * * *")
+    public void sendReminders() {
+        log.debug("리마인더 스케줄러 실행");
+
+        List<QuestionDelivery> unanswered = questionDeliveryMapper.findUnansweredForReminder(12);
+
+        for (QuestionDelivery delivery : unanswered) {
+            try {
+                var user = userMapper.findById(delivery.getUserId());
+                if (user == null) {
+                    continue;
+                }
+
+                var question = questionMapper.findById(delivery.getQuestionId());
+                if (question == null) {
+                    continue;
+                }
+
+                mailService.sendReminderEmail(
+                        user.getEmail(), question.getContent(), question.getCategory(), delivery.getAnswerToken());
+
+                questionDeliveryMapper.updateReminderSent(delivery.getId());
+
+                log.debug("리마인더 발송 완료: userId={}, deliveryId={}", delivery.getUserId(), delivery.getId());
+            } catch (Exception e) {
+                log.error("리마인더 발송 실패: deliveryId={}", delivery.getId(), e);
+            }
+        }
+    }
+
     private boolean shouldSendToday(String receiveDays) {
         if ("EVERYDAY".equals(receiveDays)) {
             return true;

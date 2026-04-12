@@ -16,13 +16,13 @@
     </select>
 
     <select id="findByAnswerToken" resultType="QuestionDelivery">
-        SELECT id, user_id, question_id, answer_token, sent_at, answered
+        SELECT id, user_id, question_id, answer_token, sent_at, answered, reminder_sent
         FROM question_delivery
         WHERE answer_token = #{answerToken}
     </select>
 
     <select id="findById" resultType="QuestionDelivery">
-        SELECT id, user_id, question_id, answer_token, sent_at, answered
+        SELECT id, user_id, question_id, answer_token, sent_at, answered, reminder_sent
         FROM question_delivery
         WHERE id = #{id}
     </select>
@@ -39,5 +39,19 @@
         WHERE user_id = #{userId}
           AND DATE(sent_at) = CURDATE()
     </select>
+
+    <select id="findUnansweredForReminder" resultType="QuestionDelivery">
+        SELECT id, user_id, question_id, answer_token, sent_at, answered, reminder_sent
+        FROM question_delivery
+        WHERE answered = FALSE
+          AND reminder_sent = FALSE
+          AND sent_at &lt;= DATE_SUB(NOW(), INTERVAL #{hoursAgo} HOUR)
+    </select>
+
+    <update id="updateReminderSent">
+        UPDATE question_delivery
+        SET reminder_sent = TRUE
+        WHERE id = #{id}
+    </update>
 
 </mapper>
