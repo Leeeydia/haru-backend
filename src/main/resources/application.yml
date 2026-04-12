@@ -49,6 +49,7 @@ ai:
 github:
   client-id: ${GITHUB_CLIENT_ID:}
   client-secret: ${GITHUB_CLIENT_SECRET:}
+  redirect-uri: ${GITHUB_REDIRECT_URI:http://localhost:5173/github/callback}
 
 # Server
 server:

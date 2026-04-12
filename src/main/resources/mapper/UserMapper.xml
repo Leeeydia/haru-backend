@@ -25,4 +25,12 @@
         VALUES (#{email}, #{password}, #{name})
     </insert>
 
+    <update id="updateGithubInfo">
+        UPDATE user
+        SET github_access_token = #{githubAccessToken},
+            github_username = #{githubUsername},
+            github_repo = #{githubRepo}
+        WHERE id = #{id}
+    </update>
+
 </mapper>

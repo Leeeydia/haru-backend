@@ -1,9 +1,11 @@
 package com.haru_backend.service;
 
 import com.haru_backend.domain.*;
+import com.haru_backend.dto.response.GitHubStatusResponse;
 import com.haru_backend.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -21,7 +23,125 @@ public class GitHubService {
 
     private final UserMapper userMapper;
 
+    @Value("${github.client-id}")
+    private String clientId;
+
+    @Value("${github.client-secret}")
+    private String clientSecret;
+
+    @Value("${github.redirect-uri:http://localhost:5173/github/callback}")
+    private String redirectUri;
+
     private static final String GITHUB_API_BASE = "https://api.github.com";
+    private static final String GITHUB_OAUTH_AUTHORIZE = "https://github.com/login/oauth/authorize";
+    private static final String GITHUB_OAUTH_ACCESS_TOKEN = "https://github.com/login/oauth/access_token";
+
+    public GitHubStatusResponse getStatus(Long userId) {
+        User user = userMapper.findById(userId);
+        boolean connected = user != null
+                && user.getGithubAccessToken() != null
+                && !user.getGithubAccessToken().isEmpty();
+
+        return GitHubStatusResponse.builder()
+                .connected(connected)
+                .githubUsername(connected ? user.getGithubUsername() : null)
+                .githubRepo(connected ? user.getGithubRepo() : null)
+                .build();
+    }
+
+    public String getAuthorizationUrl() {
+        return GITHUB_OAUTH_AUTHORIZE
+                + "?client_id=" + clientId
+                + "&redirect_uri=" + redirectUri
+                + "&scope=repo";
+    }
+
+    @SuppressWarnings("unchecked")
+    public void processCallback(Long userId, String code) {
+        // 1. code -> access token 교환
+        Map<String, String> tokenRequest = new HashMap<>();
+        tokenRequest.put("client_id", clientId);
+        tokenRequest.put("client_secret", clientSecret);
+        tokenRequest.put("code", code);
+        tokenRequest.put("redirect_uri", redirectUri);
+
+        Map<String, Object> tokenResponse = WebClient.create()
+                .post()
+                .uri(GITHUB_OAUTH_ACCESS_TOKEN)
+                .header("Accept", "application/json")
+                .bodyValue(tokenRequest)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
+
+        if (tokenResponse == null || tokenResponse.containsKey("error")) {
+            String error = tokenResponse != null ? (String) tokenResponse.get("error_description") : "응답 없음";
+            throw new IllegalArgumentException("GitHub 인증 실패: " + error);
+        }
+
+        String accessToken = (String) tokenResponse.get("access_token");
+
+        // 2. access token으로 사용자 정보 조회
+        Map<String, Object> userInfo = WebClient.create(GITHUB_API_BASE)
+                .get()
+                .uri("/user")
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/vnd.github.v3+json")
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
+
+        if (userInfo == null) {
+            throw new IllegalArgumentException("GitHub 사용자 정보 조회 실패");
+        }
+
+        String githubUsername = (String) userInfo.get("login");
+
+        // 3. 기본 레포 이름 설정 (haru-handap-notes)
+        String repoName = "haru-handap-notes";
+        ensureRepoExists(accessToken, githubUsername, repoName);
+
+        // 4. DB 저장
+        userMapper.updateGithubInfo(userId, accessToken, githubUsername, repoName);
+        log.info("GitHub 연동 완료: userId={}, username={}", userId, githubUsername);
+    }
+
+    public void disconnect(Long userId) {
+        userMapper.updateGithubInfo(userId, null, null, null);
+        log.info("GitHub 연동 해제: userId={}", userId);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void ensureRepoExists(String accessToken, String username, String repoName) {
+        WebClient client = WebClient.create(GITHUB_API_BASE);
+        try {
+            client.get()
+                    .uri("/repos/{owner}/{repo}", username, repoName)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .header("Accept", "application/vnd.github.v3+json")
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+            log.debug("GitHub 레포 이미 존재: {}/{}", username, repoName);
+        } catch (Exception e) {
+            // 레포가 없으면 생성
+            Map<String, Object> repoRequest = new HashMap<>();
+            repoRequest.put("name", repoName);
+            repoRequest.put("description", "하루한답 - 매일 면접 답변 기록");
+            repoRequest.put("private", false);
+            repoRequest.put("auto_init", true);
+
+            client.post()
+                    .uri("/user/repos")
+                    .header("Authorization", "Bearer " + accessToken)
+                    .header("Accept", "application/vnd.github.v3+json")
+                    .bodyValue(repoRequest)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+            log.info("GitHub 레포 생성: {}/{}", username, repoName);
+        }
+    }
 
     public void commitFeedback(Long userId, Question question, Answer answer, Feedback feedback) {
         User user = userMapper.findById(userId);

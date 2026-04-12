@@ -12,4 +12,9 @@ public interface UserMapper {
     User findById(@Param("id") Long id);
 
     void insertUser(User user);
+
+    void updateGithubInfo(@Param("id") Long id,
+                          @Param("githubAccessToken") String githubAccessToken,
+                          @Param("githubUsername") String githubUsername,
+                          @Param("githubRepo") String githubRepo);
 }
