@@ -48,6 +48,7 @@ public class MailService {
             helper.setTo(to);
             helper.setSubject("[하루한답] 오늘의 면접 질문이 도착했습니다!");
             helper.setText(html, true);
+            message.setHeader("Content-Type", "text/html; charset=UTF-8");
             mailSender.send(message);
             log.debug("이메일 발송 성공: {}", to);
         } catch (Exception e) {
