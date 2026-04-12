@@ -7,6 +7,7 @@ import com.haru_backend.dto.response.ApiResponse;
 import com.haru_backend.mapper.QuestionDeliveryMapper;
 import com.haru_backend.mapper.QuestionMapper;
 import com.haru_backend.mapper.UserMapper;
+import com.haru_backend.service.GitHubService;
 import com.haru_backend.service.MailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class TestController {
     private final QuestionMapper questionMapper;
     private final QuestionDeliveryMapper questionDeliveryMapper;
     private final MailService mailService;
+    private final GitHubService gitHubService;
 
     @GetMapping("/send-question")
     public ResponseEntity<ApiResponse<Map<String, Object>>> sendTestQuestion(Authentication authentication) {
@@ -63,6 +65,13 @@ public class TestController {
                         "questionId", question.getId(),
                         "answerToken", answerToken),
                 "테스트 이메일 발송 완료"));
+    }
+
+    @GetMapping("/update-readme")
+    public ResponseEntity<ApiResponse<String>> testUpdateReadme(Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        gitHubService.updateReadmeForUser(userId);
+        return ResponseEntity.ok(ApiResponse.success("README 업데이트 완료"));
     }
 
     private void insertTestQuestions() {

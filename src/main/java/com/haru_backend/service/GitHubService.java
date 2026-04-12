@@ -241,6 +241,21 @@ public class GitHubService {
         return String.format("docs: %s 면접 답변%s - %s", date, updateMark, titlePrefix);
     }
 
+    public void updateReadmeForUser(Long userId) {
+        User user = userMapper.findById(userId);
+        if (user == null || user.getGithubAccessToken() == null) {
+            throw new IllegalArgumentException("GitHub 연동이 필요합니다");
+        }
+
+        WebClient gitHubClient = WebClient.builder()
+                .baseUrl(GITHUB_API_BASE)
+                .defaultHeader("Authorization", "Bearer " + user.getGithubAccessToken())
+                .defaultHeader("Accept", "application/vnd.github.v3+json")
+                .build();
+
+        updateReadme(userId, gitHubClient, user.getGithubUsername(), user.getGithubRepo());
+    }
+
     @SuppressWarnings("unchecked")
     private void updateReadme(Long userId, WebClient gitHubClient, String owner, String repo) {
         int totalCount = statsMapper.countFinalAnswers(userId);
@@ -251,23 +266,35 @@ public class GitHubService {
         String readme = buildReadmeMarkdown(totalCount, avgScore, categoryStats, recentAnswers);
         String encodedContent = Base64.getEncoder().encodeToString(readme.getBytes(StandardCharsets.UTF_8));
 
-        String sha = getFileSha(gitHubClient, owner, repo, "README.md");
+        // 최대 2회 시도 (409 Conflict 대비 — 직전 답변 커밋으로 sha가 변경될 수 있음)
+        for (int attempt = 0; attempt < 2; attempt++) {
+            String sha = getFileSha(gitHubClient, owner, repo, "README.md");
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("message", "docs: README 자동 업데이트");
-        body.put("content", encodedContent);
-        if (sha != null) {
-            body.put("sha", sha);
+            Map<String, Object> body = new HashMap<>();
+            body.put("message", "docs: README 자동 업데이트");
+            body.put("content", encodedContent);
+            if (sha != null) {
+                body.put("sha", sha);
+            }
+
+            try {
+                gitHubClient.put()
+                        .uri("/repos/{owner}/{repo}/contents/{path}", owner, repo, "README.md")
+                        .bodyValue(body)
+                        .retrieve()
+                        .bodyToMono(Map.class)
+                        .block();
+
+                log.info("README 업데이트 성공: userId={}", userId);
+                return;
+            } catch (Exception e) {
+                log.warn("README 업데이트 시도 {}/2 실패: userId={}, error={}", attempt + 1, userId, e.getMessage());
+                if (attempt == 0) {
+                    try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
+                }
+            }
         }
-
-        gitHubClient.put()
-                .uri("/repos/{owner}/{repo}/contents/{path}", owner, repo, "README.md")
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(Map.class)
-                .block();
-
-        log.info("README 업데이트 성공: userId={}", userId);
+        log.error("README 업데이트 최종 실패: userId={}", userId);
     }
 
     private String buildReadmeMarkdown(int totalCount, Double avgScore,
