@@ -1,5 +1,6 @@
 package com.haru_backend.controller;
 
+import com.haru_backend.dto.request.QuestionGenerateRequest;
 import com.haru_backend.dto.request.QuestionRequest;
 import com.haru_backend.dto.response.ApiResponse;
 import com.haru_backend.dto.response.QuestionResponse;
@@ -36,5 +37,12 @@ public class QuestionController {
     public ResponseEntity<ApiResponse<QuestionResponse>> getQuestion(@PathVariable Long id) {
         QuestionResponse data = questionService.getQuestionById(id);
         return ResponseEntity.ok(ApiResponse.success(data));
+    }
+
+    @PostMapping("/generate")
+    public ResponseEntity<ApiResponse<List<QuestionResponse>>> generateQuestions(
+            @Valid @RequestBody QuestionGenerateRequest request) {
+        List<QuestionResponse> data = questionService.generateQuestions(request);
+        return ResponseEntity.ok(ApiResponse.success(data, "AI 질문 생성 완료"));
     }
 }

@@ -10,6 +10,7 @@ import com.haru_backend.mapper.QuestionMapper;
 import com.haru_backend.mapper.UserMapper;
 import com.haru_backend.mapper.UserProfileMapper;
 import com.haru_backend.service.MailService;
+import com.haru_backend.service.QuestionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -31,6 +32,7 @@ public class QuestionScheduler {
     private final QuestionMapper questionMapper;
     private final QuestionDeliveryMapper questionDeliveryMapper;
     private final MailService mailService;
+    private final QuestionService questionService;
     private final ObjectMapper objectMapper;
 
     // 테스트용: @Scheduled(cron = "0 */1 * * * *") — 1분마다 실행
@@ -67,6 +69,20 @@ public class QuestionScheduler {
 
                 List<Question> questions = questionMapper.findAvailableQuestions(
                         profile.getJobCategory(), stacks, deliveredIds, count);
+
+                // 보낼 질문이 부족하면 AI로 자동 생성
+                if (questions.size() < count) {
+                    log.info("질문 부족 감지: userId={}, 필요={}, 보유={}, AI 생성 시작",
+                            profile.getUserId(), count, questions.size());
+                    try {
+                        questionService.autoGenerateQuestions(profile.getJobCategory(), stacks);
+                        deliveredIds = questionDeliveryMapper.findDeliveredQuestionIds(profile.getUserId());
+                        questions = questionMapper.findAvailableQuestions(
+                                profile.getJobCategory(), stacks, deliveredIds, count);
+                    } catch (Exception ex) {
+                        log.error("AI 질문 자동 생성 실패: userId={}", profile.getUserId(), ex);
+                    }
+                }
 
                 for (Question question : questions) {
                     String answerToken = UUID.randomUUID().toString();

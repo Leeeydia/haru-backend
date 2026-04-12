@@ -4,21 +4,25 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.haru_backend.domain.Question;
+import com.haru_backend.dto.request.QuestionGenerateRequest;
 import com.haru_backend.dto.request.QuestionRequest;
 import com.haru_backend.dto.response.QuestionResponse;
 import com.haru_backend.mapper.QuestionMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class QuestionService {
 
     private final QuestionMapper questionMapper;
+    private final AiService aiService;
     private final ObjectMapper objectMapper;
 
     public QuestionResponse createQuestion(QuestionRequest request) {
@@ -51,6 +55,29 @@ public class QuestionService {
             throw new IllegalArgumentException("질문이 존재하지 않습니다");
         }
         return toResponse(question);
+    }
+
+    public List<QuestionResponse> generateQuestions(QuestionGenerateRequest request) {
+        List<Question> generated = aiService.generateQuestions(
+                request.getCategory(), request.getDifficulty(), request.getTechStacks(), 3);
+
+        List<QuestionResponse> results = new java.util.ArrayList<>();
+        for (Question question : generated) {
+            questionMapper.insertQuestion(question);
+            results.add(toResponse(questionMapper.findById(question.getId())));
+        }
+
+        log.info("AI 질문 생성 완료: category={}, difficulty={}, count={}",
+                request.getCategory(), request.getDifficulty(), results.size());
+        return results;
+    }
+
+    public List<QuestionResponse> autoGenerateQuestions(String category, List<String> stacks) {
+        QuestionGenerateRequest request = new QuestionGenerateRequest();
+        request.setCategory(category);
+        request.setDifficulty("중");
+        request.setTechStacks(stacks);
+        return generateQuestions(request);
     }
 
     private QuestionResponse toResponse(Question question) {

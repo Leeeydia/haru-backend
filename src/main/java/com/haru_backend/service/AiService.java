@@ -3,12 +3,14 @@ package com.haru_backend.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.haru_backend.domain.Feedback;
+import com.haru_backend.domain.Question;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -108,6 +110,82 @@ public class AiService {
             log.error("AI 응답 파싱 실패: {}", responseBody, e);
             throw new RuntimeException("AI 응답 파싱에 실패했습니다", e);
         }
+    }
+
+    public List<Question> generateQuestions(String category, String difficulty, List<String> techStacks, int count) {
+        String stacks = (techStacks != null && !techStacks.isEmpty()) ? String.join(", ", techStacks) : "없음";
+
+        String prompt = String.format("""
+                개발자 면접 질문을 %d개 생성해주세요.
+
+                카테고리: %s
+                난이도: %s
+                관련 기술스택: %s
+
+                아래 JSON 배열 형식으로만 응답하세요. 다른 텍스트는 포함하지 마세요:
+                [{"content": "질문 내용", "answerKeywords": "핵심 키워드1, 키워드2, 키워드3"}]
+
+                규칙:
+                - 실제 면접에서 나올 법한 실무 질문
+                - 질문은 구체적이고 명확하게
+                - answerKeywords는 채점 참고용 핵심 키워드 (쉼표 구분)
+                """, count, category, difficulty, stacks);
+
+        Map<String, Object> requestBody = Map.of(
+                "model", model,
+                "messages", List.of(
+                        Map.of("role", "system", "content", "당신은 개발자 면접 질문을 생성하는 전문가입니다. 요청된 JSON 배열 형식으로만 응답하세요."),
+                        Map.of("role", "user", "content", prompt)
+                ),
+                "temperature", 0.9
+        );
+
+        String responseBody = webClient.post()
+                .uri("/chat/completions")
+                .header("Authorization", "Bearer " + apiKey)
+                .header("Content-Type", "application/json")
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+        return parseQuestionResponse(responseBody, category, difficulty, techStacks);
+    }
+
+    private List<Question> parseQuestionResponse(String responseBody, String category, String difficulty, List<String> techStacks) {
+        try {
+            JsonNode root = objectMapper.readTree(responseBody);
+            String content = root.path("choices").get(0).path("message").path("content").asText();
+
+            String json = extractJsonArray(content);
+            JsonNode questionsNode = objectMapper.readTree(json);
+
+            String stacksJson = objectMapper.writeValueAsString(techStacks != null ? techStacks : List.of());
+
+            List<Question> questions = new ArrayList<>();
+            for (JsonNode node : questionsNode) {
+                questions.add(Question.builder()
+                        .content(node.path("content").asText())
+                        .category(category)
+                        .difficulty(difficulty)
+                        .relatedStacks(stacksJson)
+                        .answerKeywords(node.path("answerKeywords").asText())
+                        .build());
+            }
+            return questions;
+        } catch (Exception e) {
+            log.error("AI 질문 생성 응답 파싱 실패: {}", responseBody, e);
+            throw new RuntimeException("AI 질문 생성 응답 파싱에 실패했습니다", e);
+        }
+    }
+
+    private String extractJsonArray(String content) {
+        int start = content.indexOf("[");
+        int end = content.lastIndexOf("]");
+        if (start == -1 || end == -1 || end <= start) {
+            throw new RuntimeException("AI 응답에서 JSON 배열을 찾을 수 없습니다: " + content);
+        }
+        return content.substring(start, end + 1);
     }
 
     private String extractJson(String content) {
