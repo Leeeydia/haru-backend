@@ -61,4 +61,15 @@ public class StatsResponse {
         private String category;
         private double averageScore;
     }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RecentAnswer {
+        private String questionContent;
+        private String category;
+        private int totalScore;
+        private String submittedAt;
+    }
 }

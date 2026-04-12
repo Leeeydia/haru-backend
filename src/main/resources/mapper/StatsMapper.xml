@@ -77,4 +77,18 @@
         ORDER BY week_start ASC, q.category ASC
     </select>
 
+    <!-- 최근 N개 답변 (질문 제목 + 점수 + 날짜) -->
+    <select id="recentAnswers" resultType="com.haru_backend.dto.response.StatsResponse$RecentAnswer">
+        SELECT q.content AS question_content,
+               q.category,
+               f.total_score,
+               DATE_FORMAT(a.submitted_at, '%Y-%m-%d') AS submitted_at
+        FROM answer a
+                 JOIN question q ON a.question_id = q.id
+                 JOIN feedback f ON f.answer_id = a.id
+        WHERE a.user_id = #{userId} AND a.is_final = TRUE
+        ORDER BY a.submitted_at DESC
+        LIMIT #{limit}
+    </select>
+
 </mapper>

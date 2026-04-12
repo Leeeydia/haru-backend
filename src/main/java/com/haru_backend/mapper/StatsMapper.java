@@ -22,4 +22,6 @@ public interface StatsMapper {
     List<StatsResponse.DailyActivity> dailyActivities(@Param("userId") Long userId, @Param("days") int days);
 
     List<StatsResponse.WeeklyTrend> weeklyTrends(@Param("userId") Long userId, @Param("weeks") int weeks);
+
+    List<StatsResponse.RecentAnswer> recentAnswers(@Param("userId") Long userId, @Param("limit") int limit);
 }

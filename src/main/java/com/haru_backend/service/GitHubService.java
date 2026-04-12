@@ -2,6 +2,8 @@ package com.haru_backend.service;
 
 import com.haru_backend.domain.*;
 import com.haru_backend.dto.response.GitHubStatusResponse;
+import com.haru_backend.dto.response.StatsResponse;
+import com.haru_backend.mapper.StatsMapper;
 import com.haru_backend.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +16,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -22,6 +25,7 @@ import java.util.Map;
 public class GitHubService {
 
     private final UserMapper userMapper;
+    private final StatsMapper statsMapper;
 
     @Value("${github.client-id}")
     private String clientId;
@@ -183,6 +187,13 @@ public class GitHubService {
                     .block();
 
             log.info("GitHub 커밋 성공: userId={}, path={}, update={}", userId, path, isUpdate);
+
+            // README 자동 업데이트
+            try {
+                updateReadme(userId, gitHubClient, user.getGithubUsername(), user.getGithubRepo());
+            } catch (Exception ex) {
+                log.error("README 업데이트 실패: userId={}", userId, ex);
+            }
         } catch (Exception e) {
             log.error("GitHub 커밋 실패: userId={}, path={}", userId, path, e);
         }
@@ -228,6 +239,84 @@ public class GitHubService {
         String updateMark = isUpdate ? " (수정)" : "";
 
         return String.format("docs: %s 면접 답변%s - %s", date, updateMark, titlePrefix);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void updateReadme(Long userId, WebClient gitHubClient, String owner, String repo) {
+        int totalCount = statsMapper.countFinalAnswers(userId);
+        Double avgScore = statsMapper.averageScore(userId);
+        List<StatsResponse.CategoryStat> categoryStats = statsMapper.categoryStats(userId);
+        List<StatsResponse.RecentAnswer> recentAnswers = statsMapper.recentAnswers(userId, 10);
+
+        String readme = buildReadmeMarkdown(totalCount, avgScore, categoryStats, recentAnswers);
+        String encodedContent = Base64.getEncoder().encodeToString(readme.getBytes(StandardCharsets.UTF_8));
+
+        String sha = getFileSha(gitHubClient, owner, repo, "README.md");
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("message", "docs: README 자동 업데이트");
+        body.put("content", encodedContent);
+        if (sha != null) {
+            body.put("sha", sha);
+        }
+
+        gitHubClient.put()
+                .uri("/repos/{owner}/{repo}/contents/{path}", owner, repo, "README.md")
+                .bodyValue(body)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
+
+        log.info("README 업데이트 성공: userId={}", userId);
+    }
+
+    private String buildReadmeMarkdown(int totalCount, Double avgScore,
+                                        List<StatsResponse.CategoryStat> categoryStats,
+                                        List<StatsResponse.RecentAnswer> recentAnswers) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("# 하루한답 - 면접 답변 기록\n\n");
+        sb.append("> 매일 한 문제, 꾸준히 준비하는 면접 습관\n\n");
+
+        // 전체 통계
+        sb.append("## 📊 전체 통계\n\n");
+        sb.append("| 항목 | 값 |\n");
+        sb.append("|------|----|\n");
+        sb.append(String.format("| 총 답변 수 | **%d**개 |\n", totalCount));
+        sb.append(String.format("| 평균 점수 | **%.1f**점 |\n", avgScore != null ? avgScore : 0.0));
+        sb.append("\n");
+
+        // 카테고리별 통계
+        if (!categoryStats.isEmpty()) {
+            sb.append("## 📂 카테고리별 성적\n\n");
+            sb.append("| 카테고리 | 답변 수 | 평균 점수 |\n");
+            sb.append("|----------|---------|----------|\n");
+            for (StatsResponse.CategoryStat stat : categoryStats) {
+                sb.append(String.format("| %s | %d개 | %.1f점 |\n",
+                        stat.getCategory(), stat.getAnswerCount(), stat.getAverageScore()));
+            }
+            sb.append("\n");
+        }
+
+        // 최근 답변
+        if (!recentAnswers.isEmpty()) {
+            sb.append("## 📝 최근 답변\n\n");
+            sb.append("| 날짜 | 질문 | 점수 |\n");
+            sb.append("|------|------|------|\n");
+            for (StatsResponse.RecentAnswer answer : recentAnswers) {
+                String title = answer.getQuestionContent().length() > 40
+                        ? answer.getQuestionContent().substring(0, 40) + "..."
+                        : answer.getQuestionContent();
+                sb.append(String.format("| %s | %s | %d점 |\n",
+                        answer.getSubmittedAt(), title, answer.getTotalScore()));
+            }
+            sb.append("\n");
+        }
+
+        sb.append("---\n\n");
+        sb.append("*이 README는 [하루한답](https://github.com)에 의해 자동 생성됩니다.*\n");
+
+        return sb.toString();
     }
 
     private String buildMarkdown(Question question, Answer answer, Feedback feedback) {
