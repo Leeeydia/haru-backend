@@ -43,7 +43,7 @@ jwt:
 # AI API
 ai:
   api-key: ${AI_API_KEY:}
-  model: ${AI_MODEL:gpt-4o}
+  model: ${AI_MODEL:gpt-4o-mini}
 
 # GitHub OAuth
 github:
