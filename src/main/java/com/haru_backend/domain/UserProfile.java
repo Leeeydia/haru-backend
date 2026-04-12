@@ -18,4 +18,5 @@ public class UserProfile {
     private Integer receiveTime;
     private Integer dailyQuestionCount;
     private String receiveDays;
+    private Boolean reminderEnabled;
 }

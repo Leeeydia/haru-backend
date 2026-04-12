@@ -31,6 +31,7 @@ public class ProfileService {
             existing.setReceiveTime(request.getReceiveTime());
             existing.setDailyQuestionCount(request.getDailyQuestionCount());
             existing.setReceiveDays(request.getReceiveDays());
+            existing.setReminderEnabled(request.getReminderEnabled());
             userProfileMapper.updateProfile(existing);
         } else {
             UserProfile profile = UserProfile.builder()
@@ -40,6 +41,7 @@ public class ProfileService {
                     .receiveTime(request.getReceiveTime())
                     .dailyQuestionCount(request.getDailyQuestionCount())
                     .receiveDays(request.getReceiveDays())
+                    .reminderEnabled(request.getReminderEnabled() != null ? request.getReminderEnabled() : true)
                     .build();
             userProfileMapper.insertProfile(profile);
         }
@@ -60,6 +62,7 @@ public class ProfileService {
                 .receiveTime(profile.getReceiveTime())
                 .dailyQuestionCount(profile.getDailyQuestionCount())
                 .receiveDays(profile.getReceiveDays())
+                .reminderEnabled(profile.getReminderEnabled())
                 .build();
     }
 

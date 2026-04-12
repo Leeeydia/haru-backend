@@ -26,4 +26,6 @@ public class ProfileRequest {
 
     @Pattern(regexp = "EVERYDAY|WEEKDAY", message = "수신 요일은 EVERYDAY 또는 WEEKDAY여야 합니다")
     private String receiveDays;
+
+    private Boolean reminderEnabled;
 }

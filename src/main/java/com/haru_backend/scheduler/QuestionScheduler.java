@@ -113,6 +113,11 @@ public class QuestionScheduler {
 
         for (QuestionDelivery delivery : unanswered) {
             try {
+                var profile = userProfileMapper.findByUserId(delivery.getUserId());
+                if (profile != null && Boolean.FALSE.equals(profile.getReminderEnabled())) {
+                    continue;
+                }
+
                 var user = userMapper.findById(delivery.getUserId());
                 if (user == null) {
                     continue;

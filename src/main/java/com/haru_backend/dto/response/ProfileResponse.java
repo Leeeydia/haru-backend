@@ -19,4 +19,5 @@ public class ProfileResponse {
     private Integer receiveTime;
     private Integer dailyQuestionCount;
     private String receiveDays;
+    private Boolean reminderEnabled;
 }
