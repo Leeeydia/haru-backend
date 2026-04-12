@@ -28,7 +28,7 @@
     <select id="findByReceiveTime" resultType="UserProfile">
         SELECT id, user_id, job_category, tech_stacks, receive_time, daily_question_count, receive_days
         FROM user_profile
-        WHERE receive_time = #{receiveTime}
+        WHERE receive_time = #{receiveTime} OR receive_time = -1
     </select>
 
 </mapper>

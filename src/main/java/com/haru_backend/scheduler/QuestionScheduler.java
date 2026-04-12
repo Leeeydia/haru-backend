@@ -52,9 +52,18 @@ public class QuestionScheduler {
                     continue;
                 }
 
+                int count = profile.getDailyQuestionCount() != null ? profile.getDailyQuestionCount() : 1;
+
+                // 매시간 발송(-1) 사용자: 오늘 이미 발송했으면 스킵
+                if (profile.getReceiveTime() != null && profile.getReceiveTime() == -1) {
+                    int todayCount = questionDeliveryMapper.countTodayDeliveries(profile.getUserId());
+                    if (todayCount >= count) {
+                        continue;
+                    }
+                }
+
                 List<String> stacks = parseJson(profile.getTechStacks());
                 List<Long> deliveredIds = questionDeliveryMapper.findDeliveredQuestionIds(profile.getUserId());
-                int count = profile.getDailyQuestionCount() != null ? profile.getDailyQuestionCount() : 1;
 
                 List<Question> questions = questionMapper.findAvailableQuestions(
                         profile.getJobCategory(), stacks, deliveredIds, count);

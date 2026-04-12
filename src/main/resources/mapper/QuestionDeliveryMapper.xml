@@ -33,4 +33,11 @@
         WHERE id = #{id}
     </update>
 
+    <select id="countTodayDeliveries" resultType="int">
+        SELECT COUNT(*)
+        FROM question_delivery
+        WHERE user_id = #{userId}
+          AND DATE(sent_at) = CURDATE()
+    </select>
+
 </mapper>

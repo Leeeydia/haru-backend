@@ -16,8 +16,8 @@ public class ProfileRequest {
 
     private List<String> techStacks;
 
-    @Min(value = 0, message = "수신 시각은 0~23 사이여야 합니다")
-    @Max(value = 23, message = "수신 시각은 0~23 사이여야 합니다")
+    @Min(value = -1, message = "수신 시각은 -1(매시간) 또는 0~23 사이여야 합니다")
+    @Max(value = 23, message = "수신 시각은 -1(매시간) 또는 0~23 사이여야 합니다")
     private Integer receiveTime;
 
     @Min(value = 1, message = "일일 질문 수는 1~3 사이여야 합니다")

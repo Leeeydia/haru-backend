@@ -18,4 +18,6 @@ public interface QuestionDeliveryMapper {
     QuestionDelivery findById(@Param("id") Long id);
 
     void updateAnswered(@Param("id") Long id, @Param("answered") boolean answered);
+
+    int countTodayDeliveries(@Param("userId") Long userId);
 }
