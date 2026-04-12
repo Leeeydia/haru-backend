@@ -43,6 +43,18 @@ public class WrongNoteService {
         wrongNoteMapper.insertWrongNote(wrongNote);
     }
 
+    public void resolveWrongNote(Long userId, Long id) {
+        WrongNote wrongNote = wrongNoteMapper.findById(id);
+        if (wrongNote == null) {
+            throw new IllegalArgumentException("오답 노트가 존재하지 않습니다");
+        }
+        if (!wrongNote.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("본인의 오답 노트만 해결할 수 있습니다");
+        }
+
+        wrongNoteMapper.updateResolved(id, true);
+    }
+
     public void deleteWrongNote(Long userId, Long id) {
         WrongNote wrongNote = wrongNoteMapper.findById(id);
         if (wrongNote == null) {

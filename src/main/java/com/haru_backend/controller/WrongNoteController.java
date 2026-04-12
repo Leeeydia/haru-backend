@@ -33,6 +33,15 @@ public class WrongNoteController {
         return ResponseEntity.ok(ApiResponse.success(null, "오답 노트에 추가되었습니다"));
     }
 
+    @PatchMapping("/{id}/resolve")
+    public ResponseEntity<ApiResponse<Void>> resolveWrongNote(
+            Authentication authentication,
+            @PathVariable Long id) {
+        Long userId = (Long) authentication.getPrincipal();
+        wrongNoteService.resolveWrongNote(userId, id);
+        return ResponseEntity.ok(ApiResponse.success(null, "오답 노트가 해결 처리되었습니다"));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteWrongNote(
             Authentication authentication,
