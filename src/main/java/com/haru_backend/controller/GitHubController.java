@@ -24,7 +24,7 @@ public class GitHubController {
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
-    @GetMapping("/connect")
+    @PostMapping("/connect")
     public ResponseEntity<ApiResponse<Map<String, String>>> connect() {
         String url = gitHubService.getAuthorizationUrl();
         return ResponseEntity.ok(ApiResponse.success(Map.of("authUrl", url)));
