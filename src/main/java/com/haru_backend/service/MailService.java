@@ -1,12 +1,12 @@
 package com.haru_backend.service;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -44,11 +44,11 @@ public class MailService {
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setTo(to);
-            helper.setSubject("[하루한답] 오늘의 면접 질문이 도착했습니다!");
-            helper.setText(html, true);
-            message.setHeader("Content-Type", "text/html; charset=UTF-8");
+            message.setFrom(new InternetAddress(mailUsername, "하루한답", "UTF-8"));
+            message.setRecipient(MimeMessage.RecipientType.TO, new InternetAddress(to));
+            message.setSubject("[하루한답] 오늘의 면접 질문이 도착했습니다!", "UTF-8");
+            message.setContent(html, "text/html; charset=UTF-8");
+            message.setHeader("Content-Transfer-Encoding", "base64");
             mailSender.send(message);
             log.debug("이메일 발송 성공: {}", to);
         } catch (Exception e) {
