@@ -34,8 +34,9 @@ public class MailService {
             helper.setText(html, true);
             mailSender.send(message);
             log.debug("이메일 발송 성공: {}", to);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             log.error("이메일 발송 실패: {}", to, e);
+            throw new RuntimeException("이메일 발송에 실패했습니다: " + e.getMessage(), e);
         }
     }
 }
