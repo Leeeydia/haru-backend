@@ -68,6 +68,8 @@ public class AnswerService {
 
         answerMapper.insertAnswer(answer);
 
+        Question question = questionMapper.findById(delivery.getQuestionId());
+
         Long feedbackId = null;
         if (isFinal) {
             questionDeliveryMapper.updateAnswered(delivery.getId(), true);
@@ -78,8 +80,6 @@ public class AnswerService {
                 log.error("AI 피드백 자동 생성 실패: answerId={}", answer.getId(), e);
             }
         }
-
-        Question question = questionMapper.findById(delivery.getQuestionId());
 
         return AnswerResponse.builder()
                 .id(answer.getId())

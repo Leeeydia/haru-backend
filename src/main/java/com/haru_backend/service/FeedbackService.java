@@ -26,6 +26,7 @@ public class FeedbackService {
     private final QuestionDeliveryMapper questionDeliveryMapper;
     private final WrongNoteMapper wrongNoteMapper;
     private final AiService aiService;
+    private final GitHubService gitHubService;
 
     public FeedbackResponse generateFeedback(Long answerId) {
         Answer answer = answerMapper.findById(answerId);
@@ -68,6 +69,13 @@ public class FeedbackService {
                     .build();
             wrongNoteMapper.insertWrongNote(wrongNote);
             log.debug("오답 노트 자동 추가: answerId={}, score={}", answerId, feedback.getTotalScore());
+        }
+
+        // GitHub 자동 커밋
+        try {
+            gitHubService.commitFeedback(answer.getUserId(), question, answer, feedback);
+        } catch (Exception e) {
+            log.error("GitHub 자동 커밋 실패: answerId={}", answerId, e);
         }
 
         return toResponse(feedback);
