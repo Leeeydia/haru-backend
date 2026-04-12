@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haru_backend.mapper.UserProfileMapper">
+
+    <insert id="insertProfile" parameterType="UserProfile" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_profile (user_id, job_category, tech_stacks, receive_time, daily_question_count, receive_days, reminder_enabled)
+        VALUES (#{userId}, #{jobCategory}, #{techStacks}, #{receiveTime}, #{dailyQuestionCount}, #{receiveDays}, #{reminderEnabled})
+    </insert>
+
+    <select id="findByUserId" resultType="UserProfile">
+        SELECT id, user_id, job_category, tech_stacks, receive_time, daily_question_count, receive_days, reminder_enabled
+        FROM user_profile
+        WHERE user_id = #{userId}
+    </select>
+
+    <update id="updateProfile" parameterType="UserProfile">
+        UPDATE user_profile
+        SET job_category = #{jobCategory},
+            tech_stacks = #{techStacks},
+            receive_time = #{receiveTime},
+            daily_question_count = #{dailyQuestionCount},
+            receive_days = #{receiveDays},
+            reminder_enabled = #{reminderEnabled}
+        WHERE user_id = #{userId}
+    </update>
+
+    <select id="findByReceiveTime" resultType="UserProfile">
+        SELECT id, user_id, job_category, tech_stacks, receive_time, daily_question_count, receive_days, reminder_enabled
+        FROM user_profile
+        WHERE receive_time = #{receiveTime} OR receive_time = -1
+    </select>
+
+</mapper>

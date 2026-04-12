@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="margin:0; padding:0; background-color:#f5f5f5; font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;">
+    <div style="max-width:600px; margin:40px auto; background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <div th:style="${isReminder} ? 'background:#DC2626; padding:32px; text-align:center;' : 'background:#4F46E5; padding:32px; text-align:center;'">
+            <h1 style="color:#ffffff; margin:0; font-size:24px;">하루한답</h1>
+            <p th:if="${!isReminder}" style="color:#C7D2FE; margin:8px 0 0; font-size:14px;">오늘의 면접 질문이 도착했습니다</p>
+            <p th:if="${isReminder}" style="color:#FECACA; margin:8px 0 0; font-size:14px;">아직 답변하지 않은 질문이 있어요!</p>
+        </div>
+        <div style="padding:32px;">
+            <span style="display:inline-block; background:#EEF2FF; color:#4F46E5; padding:4px 12px; border-radius:20px; font-size:13px; margin-bottom:16px;" th:text="${category}"></span>
+            <p style="font-size:18px; line-height:1.6; color:#1F2937; margin:16px 0 32px;" th:text="${questionContent}"></p>
+            <div style="text-align:center;">
+                <a th:href="${answerUrl}" style="display:inline-block; background:#4F46E5; color:#ffffff; text-decoration:none; padding:14px 40px; border-radius:8px; font-size:16px; font-weight:600;">답변하러 가기</a>
+            </div>
+        </div>
+        <div style="padding:20px 32px; background:#F9FAFB; text-align:center;">
+            <p style="color:#9CA3AF; font-size:12px; margin:0;">매일 한 문제, 꾸준히 준비하는 면접 습관</p>
+        </div>
+    </div>
+</body>
+</html>

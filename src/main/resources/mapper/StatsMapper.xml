@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haru_backend.mapper.StatsMapper">
+
+    <!-- 총 최종 답변 수 -->
+    <select id="countFinalAnswers" resultType="int">
+        SELECT COUNT(*)
+        FROM answer
+        WHERE user_id = #{userId} AND is_final = TRUE
+    </select>
+
+    <!-- 전체 평균 점수 -->
+    <select id="averageScore" resultType="java.lang.Double">
+        SELECT AVG(f.total_score)
+        FROM answer a
+                 JOIN feedback f ON f.answer_id = a.id
+        WHERE a.user_id = #{userId} AND a.is_final = TRUE
+    </select>
+
+    <!-- 최근 N일 평균 점수 -->
+    <select id="recentAverageScore" resultType="java.lang.Double">
+        SELECT AVG(f.total_score)
+        FROM answer a
+                 JOIN feedback f ON f.answer_id = a.id
+        WHERE a.user_id = #{userId}
+          AND a.is_final = TRUE
+          AND a.submitted_at >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+    </select>
+
+    <!-- 답변 날짜 목록 (스트릭 계산용, 중복 제거, 내림차순) -->
+    <select id="findAnswerDatesDesc" resultType="string">
+        SELECT DISTINCT DATE_FORMAT(submitted_at, '%Y-%m-%d') AS answer_date
+        FROM answer
+        WHERE user_id = #{userId} AND is_final = TRUE
+        ORDER BY answer_date DESC
+    </select>
+
+    <!-- 카테고리별 답변 수 + 평균 점수 -->
+    <select id="categoryStats" resultType="com.haru_backend.dto.response.StatsResponse$CategoryStat">
+        SELECT q.category,
+               COUNT(*) AS answer_count,
+               AVG(f.total_score) AS average_score
+        FROM answer a
+                 JOIN question q ON a.question_id = q.id
+                 JOIN feedback f ON f.answer_id = a.id
+        WHERE a.user_id = #{userId} AND a.is_final = TRUE
+        GROUP BY q.category
+        ORDER BY average_score DESC
+    </select>
+
+    <!-- 일별 답변 활동 (최근 N일, 잔디용) -->
+    <select id="dailyActivities" resultType="com.haru_backend.dto.response.StatsResponse$DailyActivity">
+        SELECT DATE_FORMAT(submitted_at, '%Y-%m-%d') AS `date`,
+               COUNT(*) AS count
+        FROM answer
+        WHERE user_id = #{userId}
+          AND is_final = TRUE
+          AND submitted_at >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+        GROUP BY DATE_FORMAT(submitted_at, '%Y-%m-%d')
+        ORDER BY `date` ASC
+    </select>
+
+    <!-- 카테고리별 주간 평균 점수 추이 (최근 N주) -->
+    <select id="weeklyTrends" resultType="com.haru_backend.dto.response.StatsResponse$WeeklyTrend">
+        SELECT DATE_FORMAT(DATE_SUB(a.submitted_at, INTERVAL WEEKDAY(a.submitted_at) DAY), '%Y-%m-%d') AS week_start,
+               q.category,
+               AVG(f.total_score) AS average_score
+        FROM answer a
+                 JOIN question q ON a.question_id = q.id
+                 JOIN feedback f ON f.answer_id = a.id
+        WHERE a.user_id = #{userId}
+          AND a.is_final = TRUE
+          AND a.submitted_at >= DATE_SUB(CURDATE(), INTERVAL #{weeks} WEEK)
+        GROUP BY week_start, q.category
+        ORDER BY week_start ASC, q.category ASC
+    </select>
+
+    <!-- 최근 N개 답변 (질문 제목 + 점수 + 날짜) -->
+    <select id="recentAnswers" resultType="com.haru_backend.dto.response.StatsResponse$RecentAnswer">
+        SELECT q.content AS question_content,
+               q.category,
+               f.total_score,
+               DATE_FORMAT(a.submitted_at, '%Y-%m-%d') AS submitted_at
+        FROM answer a
+                 JOIN question q ON a.question_id = q.id
+                 JOIN feedback f ON f.answer_id = a.id
+        WHERE a.user_id = #{userId} AND a.is_final = TRUE
+        ORDER BY a.submitted_at DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

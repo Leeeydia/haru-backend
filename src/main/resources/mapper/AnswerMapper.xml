@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haru_backend.mapper.AnswerMapper">
+
+    <insert id="insertAnswer" parameterType="Answer" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO answer (user_id, question_id, delivery_id, content, version, is_final)
+        VALUES (#{userId}, #{questionId}, #{deliveryId}, #{content}, #{version}, #{isFinal})
+    </insert>
+
+    <select id="findByDeliveryId" resultType="Answer">
+        SELECT id, user_id, question_id, delivery_id, content, version, is_final, submitted_at
+        FROM answer
+        WHERE delivery_id = #{deliveryId}
+        ORDER BY version DESC
+    </select>
+
+    <select id="findByDeliveryIdAndUserId" resultType="Answer">
+        SELECT id, user_id, question_id, delivery_id, content, version, is_final, submitted_at
+        FROM answer
+        WHERE delivery_id = #{deliveryId} AND user_id = #{userId}
+        ORDER BY version DESC
+    </select>
+
+    <select id="findById" resultType="Answer">
+        SELECT id, user_id, question_id, delivery_id, content, version, is_final, submitted_at
+        FROM answer
+        WHERE id = #{id}
+    </select>
+
+    <select id="findLatestByDeliveryId" resultType="Answer">
+        SELECT id, user_id, question_id, delivery_id, content, version, is_final, submitted_at
+        FROM answer
+        WHERE delivery_id = #{deliveryId}
+        ORDER BY version DESC
+        LIMIT 1
+    </select>
+
+    <select id="findByUserId" resultType="Answer">
+        SELECT id, user_id, question_id, delivery_id, content, version, is_final, submitted_at
+        FROM answer
+        WHERE user_id = #{userId}
+        ORDER BY submitted_at DESC
+    </select>
+
+    <select id="getMaxVersionByDeliveryId" resultType="java.lang.Integer">
+        SELECT MAX(version)
+        FROM answer
+        WHERE delivery_id = #{deliveryId}
+    </select>
+
+    <select id="countByDeliveryId" resultType="int">
+        SELECT COUNT(*)
+        FROM answer
+        WHERE delivery_id = #{deliveryId}
+    </select>
+
+    <resultMap id="answerHistoryResultMap" type="com.haru_backend.dto.response.AnswerHistoryResponse">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="questionId" column="question_id"/>
+        <result property="deliveryId" column="delivery_id"/>
+        <result property="content" column="content"/>
+        <result property="version" column="version"/>
+        <result property="isFinal" column="is_final"/>
+        <result property="submittedAt" column="submitted_at"/>
+        <result property="questionContent" column="question_content"/>
+        <result property="category" column="category"/>
+        <result property="difficulty" column="difficulty"/>
+        <result property="score" column="score"/>
+        <result property="answerToken" column="answer_token"/>
+    </resultMap>
+
+    <select id="findMyAnswersWithDetail" resultMap="answerHistoryResultMap">
+        SELECT a.id, a.user_id, a.question_id, a.delivery_id, a.content, a.version, a.is_final, a.submitted_at,
+               q.content AS question_content, q.category, q.difficulty,
+               f.total_score AS score,
+               qd.answer_token
+        FROM answer a
+        LEFT JOIN question q ON a.question_id = q.id
+        LEFT JOIN feedback f ON a.id = f.answer_id
+        LEFT JOIN question_delivery qd ON a.delivery_id = qd.id
+        WHERE a.user_id = #{userId}
+        ORDER BY a.submitted_at DESC
+    </select>
+
+</mapper>

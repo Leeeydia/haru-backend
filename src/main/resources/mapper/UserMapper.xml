@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haru_backend.mapper.UserMapper">
+
+    <select id="findByEmail" resultType="User">
+        SELECT id, email, password, name,
+               github_access_token, github_username, github_repo,
+               created_at, updated_at
+        FROM user
+        WHERE email = #{email}
+    </select>
+
+    <select id="findById" resultType="User">
+        SELECT id, email, password, name,
+               github_access_token, github_username, github_repo,
+               created_at, updated_at
+        FROM user
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (email, password, name)
+        VALUES (#{email}, #{password}, #{name})
+    </insert>
+
+    <update id="updateGithubInfo">
+        UPDATE user
+        SET github_access_token = #{githubAccessToken},
+            github_username = #{githubUsername},
+            github_repo = #{githubRepo}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haru_backend.mapper.WrongNoteMapper">
+
+    <insert id="insertWrongNote" parameterType="WrongNote" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO wrong_note (user_id, answer_id, added_type)
+        VALUES (#{userId}, #{answerId}, #{addedType})
+    </insert>
+
+    <select id="findByUserId" resultType="WrongNote">
+        SELECT id, user_id, answer_id, added_type, resolved, resolved_at, created_at
+        FROM wrong_note
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findByUserIdWithDetails" resultType="com.haru_backend.dto.response.WrongNoteResponse">
+        SELECT wn.id,
+               wn.answer_id,
+               wn.added_type,
+               wn.resolved,
+               wn.resolved_at,
+               wn.created_at,
+               q.id AS question_id,
+               q.content AS question_content,
+               q.category,
+               q.difficulty,
+               f.total_score
+        FROM wrong_note wn
+                 JOIN answer a ON wn.answer_id = a.id
+                 JOIN question q ON a.question_id = q.id
+                 LEFT JOIN feedback f ON f.answer_id = a.id
+        WHERE wn.user_id = #{userId}
+        ORDER BY wn.created_at DESC
+    </select>
+
+    <select id="findById" resultType="WrongNote">
+        SELECT id, user_id, answer_id, added_type, resolved, resolved_at, created_at
+        FROM wrong_note
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByUserIdAndAnswerId" resultType="WrongNote">
+        SELECT id, user_id, answer_id, added_type, resolved, resolved_at, created_at
+        FROM wrong_note
+        WHERE user_id = #{userId} AND answer_id = #{answerId}
+    </select>
+
+    <update id="updateResolved">
+        UPDATE wrong_note
+        SET resolved = #{resolved},
+            resolved_at = CASE WHEN #{resolved} = TRUE THEN NOW() ELSE NULL END
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM wrong_note
+        WHERE id = #{id}
+    </delete>
+
+</mapper>

@@ -4,7 +4,7 @@ spring:
 
   # DB
   datasource:
-    url: jdbc:mysql://localhost:3306/haru_handap?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://localhost:3306/haru_handap?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -15,6 +15,7 @@ spring:
     port: ${MAIL_PORT:587}
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
+    default-encoding: UTF-8
     properties:
       mail:
         smtp:
@@ -43,12 +44,13 @@ jwt:
 # AI API
 ai:
   api-key: ${AI_API_KEY:}
-  model: ${AI_MODEL:gpt-4o}
+  model: ${AI_MODEL:gpt-4o-mini}
 
 # GitHub OAuth
 github:
   client-id: ${GITHUB_CLIENT_ID:}
   client-secret: ${GITHUB_CLIENT_SECRET:}
+  redirect-uri: ${GITHUB_REDIRECT_URI:http://localhost:5173/github/callback}
 
 # Server
 server:
