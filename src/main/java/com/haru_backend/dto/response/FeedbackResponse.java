@@ -22,4 +22,6 @@ public class FeedbackResponse {
     private String specificity;
     private String improvedAnswer;
     private LocalDateTime createdAt;
+    private String answerContent;
+    private String answerToken;
 }

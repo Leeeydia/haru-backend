@@ -29,4 +29,7 @@ public class AnswerHistoryResponse {
 
     // 피드백 점수
     private Integer score;
+
+    // 답변 토큰
+    private String answerToken;
 }

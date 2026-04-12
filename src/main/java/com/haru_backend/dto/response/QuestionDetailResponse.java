@@ -25,10 +25,11 @@ public class QuestionDetailResponse {
     private List<String> relatedStacks;
     private List<String> answerKeywords;
     private LocalDateTime createdAt;
+    private Long deliveryId;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static QuestionDetailResponse from(Question question) {
+    public static QuestionDetailResponse from(Question question, Long deliveryId) {
         return QuestionDetailResponse.builder()
                 .id(question.getId())
                 .content(question.getContent())
@@ -37,6 +38,7 @@ public class QuestionDetailResponse {
                 .relatedStacks(parseJsonArray(question.getRelatedStacks()))
                 .answerKeywords(parseJsonArray(question.getAnswerKeywords()))
                 .createdAt(question.getCreatedAt())
+                .deliveryId(deliveryId)
                 .build();
     }
 

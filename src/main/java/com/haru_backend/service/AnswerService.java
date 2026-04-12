@@ -39,7 +39,7 @@ public class AnswerService {
             throw new IllegalArgumentException("질문을 찾을 수 없습니다");
         }
 
-        return QuestionDetailResponse.from(question);
+        return QuestionDetailResponse.from(question, delivery.getId());
     }
 
     public AnswerResponse submitAnswer(Long userId, AnswerRequest request) {

@@ -5,8 +5,10 @@ import com.haru_backend.domain.Feedback;
 import com.haru_backend.domain.Question;
 import com.haru_backend.domain.WrongNote;
 import com.haru_backend.dto.response.FeedbackResponse;
+import com.haru_backend.domain.QuestionDelivery;
 import com.haru_backend.mapper.AnswerMapper;
 import com.haru_backend.mapper.FeedbackMapper;
+import com.haru_backend.mapper.QuestionDeliveryMapper;
 import com.haru_backend.mapper.QuestionMapper;
 import com.haru_backend.mapper.WrongNoteMapper;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class FeedbackService {
     private final FeedbackMapper feedbackMapper;
     private final AnswerMapper answerMapper;
     private final QuestionMapper questionMapper;
+    private final QuestionDeliveryMapper questionDeliveryMapper;
     private final WrongNoteMapper wrongNoteMapper;
     private final AiService aiService;
 
@@ -83,7 +86,13 @@ public class FeedbackService {
         if (feedback == null) {
             throw new IllegalArgumentException("피드백이 존재하지 않습니다");
         }
-        return toResponse(feedback);
+
+        QuestionDelivery delivery = questionDeliveryMapper.findById(answer.getDeliveryId());
+
+        FeedbackResponse response = toResponse(feedback);
+        response.setAnswerContent(answer.getContent());
+        response.setAnswerToken(delivery != null ? delivery.getAnswerToken() : null);
+        return response;
     }
 
     private FeedbackResponse toResponse(Feedback feedback) {
