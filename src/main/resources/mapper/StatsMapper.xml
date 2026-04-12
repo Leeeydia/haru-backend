@@ -31,7 +31,7 @@
 
     <!-- 답변 날짜 목록 (스트릭 계산용, 중복 제거, 내림차순) -->
     <select id="findAnswerDatesDesc" resultType="string">
-        SELECT DISTINCT DATE(submitted_at) AS answer_date
+        SELECT DISTINCT DATE_FORMAT(submitted_at, '%Y-%m-%d') AS answer_date
         FROM answer
         WHERE user_id = #{userId} AND is_final = TRUE
         ORDER BY answer_date DESC
@@ -52,14 +52,14 @@
 
     <!-- 일별 답변 활동 (최근 N일, 잔디용) -->
     <select id="dailyActivities" resultType="com.haru_backend.dto.response.StatsResponse$DailyActivity">
-        SELECT DATE(submitted_at) AS date,
+        SELECT DATE_FORMAT(submitted_at, '%Y-%m-%d') AS `date`,
                COUNT(*) AS count
         FROM answer
         WHERE user_id = #{userId}
           AND is_final = TRUE
           AND submitted_at >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
-        GROUP BY DATE(submitted_at)
-        ORDER BY date ASC
+        GROUP BY DATE_FORMAT(submitted_at, '%Y-%m-%d')
+        ORDER BY `date` ASC
     </select>
 
     <!-- 카테고리별 주간 평균 점수 추이 (최근 N주) -->
