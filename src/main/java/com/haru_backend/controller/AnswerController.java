@@ -36,7 +36,7 @@ public class AnswerController {
         return ResponseEntity.ok(ApiResponse.success(data, "답변 제출 성공"));
     }
 
-    @GetMapping("/{deliveryId}")
+    @GetMapping("/delivery/{deliveryId}")
     public ResponseEntity<ApiResponse<List<AnswerResponse>>> getAnswers(@PathVariable Long deliveryId) {
         List<AnswerResponse> data = answerService.getAnswersByDeliveryId(deliveryId);
         return ResponseEntity.ok(ApiResponse.success(data));
