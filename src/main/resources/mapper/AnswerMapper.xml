@@ -72,6 +72,25 @@
         <result property="answerToken" column="answer_token"/>
     </resultMap>
 
+    <select id="findDraftByDeliveryId" resultType="Answer">
+        SELECT id, user_id, question_id, delivery_id, content, version, is_final, submitted_at
+        FROM answer
+        WHERE delivery_id = #{deliveryId} AND is_final = FALSE
+        ORDER BY version DESC
+        LIMIT 1
+    </select>
+
+    <update id="updateAnswer" parameterType="Answer">
+        UPDATE answer
+        SET content = #{content}, submitted_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteDraftsByDeliveryId">
+        DELETE FROM answer
+        WHERE delivery_id = #{deliveryId} AND is_final = FALSE
+    </delete>
+
     <select id="findMyAnswersWithDetail" resultMap="answerHistoryResultMap">
         SELECT a.id, a.user_id, a.question_id, a.delivery_id, a.content, a.version, a.is_final, a.submitted_at,
                q.content AS question_content, q.category, q.difficulty,

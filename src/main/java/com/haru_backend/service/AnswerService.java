@@ -52,21 +52,48 @@ public class AnswerService {
             throw new IllegalArgumentException("본인의 질문에만 답변할 수 있습니다");
         }
 
-        Integer maxVersion = answerMapper.getMaxVersionByDeliveryId(request.getDeliveryId());
-        int newVersion = (maxVersion != null ? maxVersion : 0) + 1;
-
         boolean isFinal = request.getIsFinal() != null && request.getIsFinal();
+        Answer answer;
 
-        Answer answer = Answer.builder()
-                .userId(userId)
-                .questionId(delivery.getQuestionId())
-                .deliveryId(request.getDeliveryId())
-                .content(request.getContent())
-                .version(newVersion)
-                .isFinal(isFinal)
-                .build();
+        if (isFinal) {
+            // 최종 제출: 새 답변 생성 후 임시저장 삭제
+            Integer maxVersion = answerMapper.getMaxVersionByDeliveryId(request.getDeliveryId());
+            int newVersion = (maxVersion != null ? maxVersion : 0) + 1;
 
-        answerMapper.insertAnswer(answer);
+            answer = Answer.builder()
+                    .userId(userId)
+                    .questionId(delivery.getQuestionId())
+                    .deliveryId(request.getDeliveryId())
+                    .content(request.getContent())
+                    .version(newVersion)
+                    .isFinal(true)
+                    .build();
+
+            answerMapper.insertAnswer(answer);
+            answerMapper.deleteDraftsByDeliveryId(request.getDeliveryId());
+        } else {
+            // 임시저장: 기존 임시저장이 있으면 업데이트, 없으면 새로 생성
+            Answer existingDraft = answerMapper.findDraftByDeliveryId(request.getDeliveryId());
+            if (existingDraft != null) {
+                existingDraft.setContent(request.getContent());
+                answerMapper.updateAnswer(existingDraft);
+                answer = existingDraft;
+            } else {
+                Integer maxVersion = answerMapper.getMaxVersionByDeliveryId(request.getDeliveryId());
+                int newVersion = (maxVersion != null ? maxVersion : 0) + 1;
+
+                answer = Answer.builder()
+                        .userId(userId)
+                        .questionId(delivery.getQuestionId())
+                        .deliveryId(request.getDeliveryId())
+                        .content(request.getContent())
+                        .version(newVersion)
+                        .isFinal(false)
+                        .build();
+
+                answerMapper.insertAnswer(answer);
+            }
+        }
 
         Question question = questionMapper.findById(delivery.getQuestionId());
 
