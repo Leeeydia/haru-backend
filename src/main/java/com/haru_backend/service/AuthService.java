@@ -5,6 +5,7 @@ import com.haru_backend.dto.request.LoginRequest;
 import com.haru_backend.dto.request.SignupRequest;
 import com.haru_backend.dto.response.AuthResponse;
 import com.haru_backend.mapper.UserMapper;
+import com.haru_backend.mapper.UserProfileMapper;
 import com.haru_backend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserMapper userMapper;
+    private final UserProfileMapper userProfileMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -38,6 +40,7 @@ public class AuthService {
                 .userId(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
+                .profileCompleted(false)
                 .build();
     }
 
@@ -53,11 +56,14 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(user.getId(), user.getEmail());
 
+        boolean profileCompleted = userProfileMapper.findByUserId(user.getId()) != null;
+
         return AuthResponse.builder()
                 .token(token)
                 .userId(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
+                .profileCompleted(profileCompleted)
                 .build();
     }
 }

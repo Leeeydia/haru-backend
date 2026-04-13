@@ -27,4 +27,10 @@ public interface AnswerMapper {
     int countByDeliveryId(@Param("deliveryId") Long deliveryId);
 
     List<AnswerHistoryResponse> findMyAnswersWithDetail(@Param("userId") Long userId);
+
+    Answer findDraftByDeliveryId(@Param("deliveryId") Long deliveryId);
+
+    void updateAnswer(Answer answer);
+
+    void deleteDraftsByDeliveryId(@Param("deliveryId") Long deliveryId);
 }

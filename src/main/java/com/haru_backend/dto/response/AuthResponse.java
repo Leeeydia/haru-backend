@@ -15,4 +15,5 @@ public class AuthResponse {
     private Long userId;
     private String email;
     private String name;
+    private Boolean profileCompleted;
 }

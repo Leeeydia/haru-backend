@@ -29,7 +29,7 @@ public class ProfileService {
             existing.setJobCategory(request.getJobCategory());
             existing.setTechStacks(techStacksJson);
             existing.setReceiveTime(request.getReceiveTime());
-            existing.setDailyQuestionCount(request.getDailyQuestionCount());
+            existing.setDailyQuestionCount(1);
             existing.setReceiveDays(request.getReceiveDays());
             existing.setReminderEnabled(request.getReminderEnabled());
             userProfileMapper.updateProfile(existing);
@@ -39,7 +39,7 @@ public class ProfileService {
                     .jobCategory(request.getJobCategory())
                     .techStacks(techStacksJson)
                     .receiveTime(request.getReceiveTime())
-                    .dailyQuestionCount(request.getDailyQuestionCount())
+                    .dailyQuestionCount(1)
                     .receiveDays(request.getReceiveDays())
                     .reminderEnabled(request.getReminderEnabled() != null ? request.getReminderEnabled() : true)
                     .build();

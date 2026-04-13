@@ -1,5 +1,6 @@
 package com.haru_backend.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class AnswerHistoryResponse {
     private Long deliveryId;
     private String content;
     private Integer version;
+    @JsonProperty("isFinal")
     private Boolean isFinal;
     private LocalDateTime submittedAt;
 
