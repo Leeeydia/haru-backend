@@ -376,6 +376,16 @@ public class GitHubService {
         sb.append("### 구체성\n");
         sb.append(feedback.getSpecificity()).append("\n\n");
 
+        if (feedback.getPraise() != null && !feedback.getPraise().isEmpty()) {
+            sb.append("### 잘한 점\n");
+            sb.append(feedback.getPraise()).append("\n\n");
+        }
+
+        if (feedback.getInterviewerComment() != null && !feedback.getInterviewerComment().isEmpty()) {
+            sb.append("### 면접관 한마디\n");
+            sb.append(feedback.getInterviewerComment()).append("\n\n");
+        }
+
         sb.append("---\n\n");
 
         sb.append("## 모범 답변\n\n");
