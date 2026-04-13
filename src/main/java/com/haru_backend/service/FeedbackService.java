@@ -3,6 +3,7 @@ package com.haru_backend.service;
 import com.haru_backend.domain.Answer;
 import com.haru_backend.domain.Feedback;
 import com.haru_backend.domain.Question;
+import com.haru_backend.domain.User;
 import com.haru_backend.domain.WrongNote;
 import com.haru_backend.dto.response.FeedbackResponse;
 import com.haru_backend.domain.QuestionDelivery;
@@ -10,6 +11,7 @@ import com.haru_backend.mapper.AnswerMapper;
 import com.haru_backend.mapper.FeedbackMapper;
 import com.haru_backend.mapper.QuestionDeliveryMapper;
 import com.haru_backend.mapper.QuestionMapper;
+import com.haru_backend.mapper.UserMapper;
 import com.haru_backend.mapper.WrongNoteMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,7 @@ public class FeedbackService {
     private final AnswerMapper answerMapper;
     private final QuestionMapper questionMapper;
     private final QuestionDeliveryMapper questionDeliveryMapper;
+    private final UserMapper userMapper;
     private final WrongNoteMapper wrongNoteMapper;
     private final AiService aiService;
     private final GitHubService gitHubService;
@@ -36,6 +39,9 @@ public class FeedbackService {
 
         Question question = questionMapper.findById(answer.getQuestionId());
 
+        User user = userMapper.findById(answer.getUserId());
+        String userName = (user != null) ? user.getName() : null;
+
         Feedback feedback;
         try {
             feedback = aiService.analyzeFeedback(
@@ -44,7 +50,8 @@ public class FeedbackService {
                     answer.getContent(),
                     question.getCategory(),
                     question.getDifficulty(),
-                    question.getAnswerKeywords());
+                    question.getAnswerKeywords(),
+                    userName);
         } catch (Exception e) {
             log.warn("AI 피드백 생성 실패, 기본 피드백 반환: answerId={}", answerId, e);
             feedback = Feedback.builder()
@@ -112,6 +119,8 @@ public class FeedbackService {
                 .structure(feedback.getStructure())
                 .expression(feedback.getExpression())
                 .specificity(feedback.getSpecificity())
+                .praise(feedback.getPraise())
+                .interviewerComment(feedback.getInterviewerComment())
                 .improvedAnswer(feedback.getImprovedAnswer())
                 .createdAt(feedback.getCreatedAt())
                 .build();

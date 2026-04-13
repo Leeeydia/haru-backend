@@ -20,6 +20,8 @@ public class Feedback {
     private String structure;
     private String expression;
     private String specificity;
+    private String praise;
+    private String interviewerComment;
     private String improvedAnswer;
     private LocalDateTime createdAt;
 }

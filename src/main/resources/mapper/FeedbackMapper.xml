@@ -5,18 +5,18 @@
 <mapper namespace="com.haru_backend.mapper.FeedbackMapper">
 
     <insert id="insertFeedback" parameterType="Feedback" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO feedback (answer_id, total_score, completeness, structure, expression, specificity, improved_answer)
-        VALUES (#{answerId}, #{totalScore}, #{completeness}, #{structure}, #{expression}, #{specificity}, #{improvedAnswer})
+        INSERT INTO feedback (answer_id, total_score, completeness, structure, expression, specificity, praise, interviewer_comment, improved_answer)
+        VALUES (#{answerId}, #{totalScore}, #{completeness}, #{structure}, #{expression}, #{specificity}, #{praise}, #{interviewerComment}, #{improvedAnswer})
     </insert>
 
     <select id="findByAnswerId" resultType="Feedback">
-        SELECT id, answer_id, total_score, completeness, structure, expression, specificity, improved_answer, created_at
+        SELECT id, answer_id, total_score, completeness, structure, expression, specificity, praise, interviewer_comment, improved_answer, created_at
         FROM feedback
         WHERE answer_id = #{answerId}
     </select>
 
     <select id="findLatestByAnswerId" resultType="Feedback">
-        SELECT id, answer_id, total_score, completeness, structure, expression, specificity, improved_answer, created_at
+        SELECT id, answer_id, total_score, completeness, structure, expression, specificity, praise, interviewer_comment, improved_answer, created_at
         FROM feedback
         WHERE answer_id = #{answerId}
         ORDER BY created_at DESC
