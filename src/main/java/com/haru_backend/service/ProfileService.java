@@ -7,18 +7,23 @@ import com.haru_backend.domain.UserProfile;
 import com.haru_backend.dto.request.ProfileRequest;
 import com.haru_backend.dto.response.ProfileResponse;
 import com.haru_backend.mapper.UserProfileMapper;
+import com.haru_backend.scheduler.QuestionScheduler;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProfileService {
 
     private final UserProfileMapper userProfileMapper;
     private final ObjectMapper objectMapper;
+    private final QuestionScheduler questionScheduler;
 
     public ProfileResponse saveProfile(Long userId, ProfileRequest request) {
         String techStacksJson = toJson(request.getTechStacks());
@@ -45,6 +50,17 @@ public class ProfileService {
                     .build();
             userProfileMapper.insertProfile(profile);
         }
+
+        // 온보딩 완료 직후 첫 질문 이메일 즉시 발송 (비동기, 실패해도 프로필 저장은 성공)
+        final Long uid = userId;
+        CompletableFuture.runAsync(() -> {
+            try {
+                questionScheduler.sendQuestionsToUser(uid);
+                log.info("온보딩 즉시 질문 발송 완료: userId={}", uid);
+            } catch (Exception e) {
+                log.error("온보딩 즉시 질문 발송 실패: userId={}", uid, e);
+            }
+        });
 
         return getProfile(userId);
     }
