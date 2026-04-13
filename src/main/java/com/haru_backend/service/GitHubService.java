@@ -33,7 +33,7 @@ public class GitHubService {
     @Value("${github.client-secret}")
     private String clientSecret;
 
-    @Value("${github.redirect-uri:http://localhost:5173/github/callback}")
+    @Value("${github.redirect-uri:${FRONTEND_URL:http://localhost:5173}/github/callback}")
     private String redirectUri;
 
     private static final String GITHUB_API_BASE = "https://api.github.com";
