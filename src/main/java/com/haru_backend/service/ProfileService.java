@@ -29,6 +29,7 @@ public class ProfileService {
         String techStacksJson = toJson(request.getTechStacks());
 
         UserProfile existing = userProfileMapper.findByUserId(userId);
+        boolean isNewProfile = (existing == null);
 
         if (existing != null) {
             existing.setJobCategory(request.getJobCategory());
@@ -51,16 +52,18 @@ public class ProfileService {
             userProfileMapper.insertProfile(profile);
         }
 
-        // 온보딩 완료 직후 첫 질문 이메일 즉시 발송 (비동기, 실패해도 프로필 저장은 성공)
-        final Long uid = userId;
-        CompletableFuture.runAsync(() -> {
-            try {
-                questionScheduler.sendQuestionsToUser(uid);
-                log.info("온보딩 즉시 질문 발송 완료: userId={}", uid);
-            } catch (Exception e) {
-                log.error("온보딩 즉시 질문 발송 실패: userId={}", uid, e);
-            }
-        });
+        // 온보딩(최초 프로필 생성) 완료 직후 첫 질문 이메일 즉시 발송 (비동기, 실패해도 프로필 저장은 성공)
+        if (isNewProfile) {
+            final Long uid = userId;
+            CompletableFuture.runAsync(() -> {
+                try {
+                    questionScheduler.sendQuestionsToUser(uid);
+                    log.info("온보딩 즉시 질문 발송 완료: userId={}", uid);
+                } catch (Exception e) {
+                    log.error("온보딩 즉시 질문 발송 실패: userId={}", uid, e);
+                }
+            });
+        }
 
         return getProfile(userId);
     }
