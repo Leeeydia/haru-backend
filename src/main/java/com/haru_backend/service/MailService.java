@@ -25,6 +25,9 @@ public class MailService {
     @Value("${spring.mail.host:}")
     private String mailHost;
 
+    @Value("${FRONTEND_URL:http://localhost:5173}")
+    private String frontendUrl;
+
     @PostConstruct
     public void checkMailConfig() {
         boolean hasUsername = mailUsername != null && !mailUsername.isEmpty();
@@ -49,7 +52,7 @@ public class MailService {
         Context context = new Context();
         context.setVariable("questionContent", questionContent);
         context.setVariable("category", category);
-        context.setVariable("answerUrl", "http://localhost:5173/answer/" + answerToken);
+        context.setVariable("answerUrl", frontendUrl + "/answer/" + answerToken);
         context.setVariable("isReminder", isReminder);
 
         String html = templateEngine.process("mail/question", context);

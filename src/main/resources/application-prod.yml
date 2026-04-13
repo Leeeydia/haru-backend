@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  thymeleaf:
+    cache: true
+
+server:
+  port: ${PORT:8081}
+
+logging:
+  level:
+    com.haru_backend: INFO
+    org.mybatis: INFO
