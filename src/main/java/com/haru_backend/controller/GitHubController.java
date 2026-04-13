@@ -25,8 +25,9 @@ public class GitHubController {
     }
 
     @PostMapping("/connect")
-    public ResponseEntity<ApiResponse<Map<String, String>>> connect() {
-        String url = gitHubService.getAuthorizationUrl();
+    public ResponseEntity<ApiResponse<Map<String, String>>> connect(Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        String url = gitHubService.getAuthorizationUrl(userId);
         return ResponseEntity.ok(ApiResponse.success(Map.of("authUrl", url)));
     }
 
@@ -36,9 +37,11 @@ public class GitHubController {
             @RequestBody Map<String, String> request) {
         Long userId = (Long) authentication.getPrincipal();
         String code = request.get("code");
+        String state = request.get("state");
         if (code == null || code.isEmpty()) {
             throw new IllegalArgumentException("code 파라미터가 필요합니다");
         }
+        gitHubService.verifyOAuthState(userId, state);
         gitHubService.processCallback(userId, code);
         return ResponseEntity.ok(ApiResponse.success(null, "GitHub 연동 완료"));
     }

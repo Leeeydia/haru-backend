@@ -14,10 +14,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -40,6 +38,9 @@ public class GitHubService {
     private static final String GITHUB_OAUTH_AUTHORIZE = "https://github.com/login/oauth/authorize";
     private static final String GITHUB_OAUTH_ACCESS_TOKEN = "https://github.com/login/oauth/access_token";
 
+    // OAuth state -> userId 매핑 (CSRF 방지)
+    private final Map<String, Long> pendingOAuthStates = new ConcurrentHashMap<>();
+
     public GitHubStatusResponse getStatus(Long userId) {
         User user = userMapper.findById(userId);
         boolean connected = user != null
@@ -53,11 +54,27 @@ public class GitHubService {
                 .build();
     }
 
-    public String getAuthorizationUrl() {
+    public String getAuthorizationUrl(Long userId) {
+        String state = UUID.randomUUID().toString();
+        pendingOAuthStates.put(state, userId);
         return GITHUB_OAUTH_AUTHORIZE
                 + "?client_id=" + clientId
                 + "&redirect_uri=" + redirectUri
-                + "&scope=repo";
+                + "&scope=repo"
+                + "&state=" + state;
+    }
+
+    public void verifyOAuthState(Long userId, String state) {
+        if (state == null || state.isEmpty()) {
+            throw new IllegalArgumentException("OAuth state 파라미터가 필요합니다");
+        }
+        Long stateUserId = pendingOAuthStates.remove(state);
+        if (stateUserId == null) {
+            throw new IllegalArgumentException("유효하지 않거나 만료된 OAuth state입니다");
+        }
+        if (!stateUserId.equals(userId)) {
+            throw new IllegalArgumentException("OAuth 요청 사용자와 현재 로그인 사용자가 일치하지 않습니다");
+        }
     }
 
     @SuppressWarnings("unchecked")
